@@ -154,16 +154,11 @@ class WpWithPersona {
                 // Admin Stuff
                 if ( is_admin() ) {
                         // Load API for generic admin functions.
-                        //$this->admin = new WpWithPersona_Admin_API();
+                        $this->admin = new WpWithPersona_Admin_API();
 
                         // Load admin JS & CSS.
                         add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ), 10, 1 );
                         add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_styles' ), 10, 1 );
-                        // Loads custom Media stuff when editing services or partners
-                        //global $pagenow;
-                        //if (( $pagenow == 'post.php' ) || (get_post_type() == 'service')) {
-                        //    add_action( 'admin_enqueue_scripts', array( $this, 'add_media_script' ) );
-			//}
 			// Add main menu
 			add_action('admin_menu', array( $this, 'wp_withpersona_dashboard'), 10, 1);
                }
@@ -234,7 +229,7 @@ class WpWithPersona {
 	 * @since    1.0.1
 	 */
 	function wp_withpersona_dashboard(){
-	 add_menu_page(__('Persona Dashboard','languages'), __('Persona Dashboard','languages'), 'manage_options', 'the-wp_withpersona-dashboard', array( $this, 'wp_withpersona_dashboard_page'), 'dashicons-id', 1 );
+	 add_menu_page(__('Persona Dashboard','languages'), __('Persona Dashboard','languages'), 'manage_options', 'the-wp_withpersona-dashboard', array( $this, 'wp_withpersona_dashboard_page'), 'dashicons-id', 0 );
 	}
 
 	/**
@@ -301,10 +296,10 @@ class WpWithPersona {
          * @return void
          */
         public function admin_enqueue_styles( $hook = '' ) {
-                //wp_register_style( $this->_token . '-admin', esc_url( $this->assets_url ) . 'css/admin.css', array(), $this->_version );
-                //wp_enqueue_style( $this->_token . '-admin' );
+                wp_register_style( $this->_token . '-admin', esc_url( $this->assets_url ) . 'css/admin.css', array(), $this->_version );
+                wp_enqueue_style( $this->_token . '-admin' );
                 //wp_enqueue_style( 'datetime-picker', esc_url( $this->assets_url ) .'css/jquery.datetimepicker.css' );
-                wp_enqueue_style( 'jquery-wp-css', esc_url( $this->assets_url ) .'css/jquery-ui-1.13.2.custom/jquery-ui.min.css' );
+                //wp_enqueue_style( 'jquery-wp-css', esc_url( $this->assets_url ) .'css/jquery-ui-1.13.2.custom/jquery-ui.min.css' );
         } // End admin_enqueue_styles ()
 
 	/**
@@ -330,8 +325,12 @@ class WpWithPersona {
                 // Load panel js script if it is the admin page
                 $screen = get_current_screen();
                 $current_slug = $screen->base;
+                //echo "<h1>".$current_slug."</h1>";
                 if ( $current_slug === "toplevel_page_".$this->admin_url ) {
                         wp_enqueue_script( 'panel', esc_url( $this->assets_url ) .'js/admin/panel.js', array( 'wp-api' ) );
+		}
+                if ( $current_slug === "settings_page_wp_with_persona_settings" ) {
+                        wp_enqueue_script( 'settings', esc_url( $this->assets_url ) .'js/admin/settings.js', array( 'wp-api' ) );
 		}
 	} // End admin_enqueue_scripts ()
 
