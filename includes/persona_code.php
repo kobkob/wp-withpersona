@@ -1,4 +1,6 @@
 ?>
+
+<small>Powered by <b><a target="__blank" href="https://withpersona.com/">With Persona</b></a></small><br>&nbsp;<br>
 <script src="https://cdn.withpersona.com/dist/persona-v4.8.0.js"></script>
 
 <script>

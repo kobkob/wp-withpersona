@@ -110,6 +110,7 @@ $class_i = ($class_i == $class_odd) ? $class_even : $class_odd;
  
   </div>
 </div>
+<div id="registration-url">Registration URL: <?php echo wp_registration_url(); ?></div>
 
 <!--
 <div id="upload-dialog">

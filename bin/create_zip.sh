@@ -1,3 +1,3 @@
 #!/bin/bash
 
-zip -r . foo -x 
+zip -X -r ../wp-withpersona.zip . -x $(cat .zipignore) 

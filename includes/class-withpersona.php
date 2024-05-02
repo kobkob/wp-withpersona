@@ -146,7 +146,10 @@ class WpWithPersona {
                 add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10 );
 
                 // Persona workflow
-                add_action( 'register_form', array( $this, 'wp_withpersona_new_user'), 10, 1 );
+                add_action( 'register_form', array( $this, 'wp_withpersona_new_user'), 0, 1 );
+                add_action( 'register_post', array( $this, 'wp_withpersona_register_user_post'), 10, 1 );
+                add_action( 'user_register', array( $this, 'wp_withpersona_user_register'), 10, 1 );
+                add_action( 'register_new_user', array( $this, 'wp_withpersona_new_user_register'), 10, 1 );
 
 		// Shortcode
                 add_action( 'widgets_init', array( $this, 'shortcodes_init') );
@@ -170,45 +173,74 @@ class WpWithPersona {
 
         /**
          * Register user in Persona after creation.
-         *
+         * Limit number of registrations per month
+         * 
          * @since    1.0.0
          */
 	public function wp_withpersona_new_user( $user_id ) {
-            ?>
-             <small>Powered by <b><a target="__blank" href="https://withpersona.com/">With Persona</b></a></small><br>&nbsp;<br>
-<script src="https://cdn.withpersona.com/dist/persona-v4.8.0.js"></script>
-
-<script>
-
-  const client = new Persona.Client({
-
-    templateId: 'itmpl_1k5CoM5gd1oo2cbxn1zdZnWZ',
-
-    environmentId: 'env_9tVLdprhMFNx9fHSPZe7HUPM',
-
-    onReady: () => client.open(),
-
-    onComplete: ({ inquiryId, status, fields }) => {
-
-      console.log(`Completed inquiry ${inquiryId} with status ${status}`);
-
-    }
-
-  });
-
-</script>
-            <?php
-	    //$persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/persona_code.php';
-/*	
+	    $persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/persona_code.php';
 	    if (file_exists($persona_code)) {
-	        require_once($persona_code);
+	        //require_once($persona_code);
+                echo "<h1>Fake Persona</h1>";
 	    } else {
 	        echo "<h1>Error, $persona_code not found</h1>";
 	    }
     
 	    if ( isset( $_POST['persona_id'] ) ) update_user_meta($user_id, 'persona_id', $_POST['persona_id']);
-*/
 	}
+
+
+        /**
+         * Register user post after creation.
+         * Limit number of registrations per month
+         *
+         * @since    1.2
+         */
+	public function wp_withpersona_register_user_post( $user_id ) {
+           $persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'public/register_user_post.php';
+	    if (file_exists($persona_code)) {
+	        require_once($persona_code);
+	    } else {
+	        echo "<h1>Error, $persona_code not found</h1>";
+	    }
+            return $user_id;
+        }
+
+        /**
+         * Register user after post creation.
+         * Limit number of registrations per month
+         *
+         * @since    1.0.0
+         */
+	public function wp_withpersona_user_register( $user_id ) {
+           $persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'public/user_register.php';
+	    if (file_exists($persona_code)) {
+	        require_once($persona_code);
+	    } else {
+	        echo "<h1>Error, $persona_code not found</h1>";
+                die("Error");
+	    }
+            return $user_id;
+
+        }
+
+
+        /**
+         * Register new user after creation.
+         * Limit number of registrations per month
+         *
+         * @since    1.0.0
+         */
+	public function wp_withpersona_new_user_register( $user_id ) {
+           $persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'public/new_user_register.php';
+	    if (file_exists($persona_code)) {
+	        require_once($persona_code);
+	    } else {
+	        echo "<h1>Error, $persona_code not found</h1>";
+	    }
+            return $user_id;
+
+        }
 
 
         /**
