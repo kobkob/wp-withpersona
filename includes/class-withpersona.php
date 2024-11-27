@@ -180,8 +180,8 @@ class WpWithPersona {
 	public function wp_withpersona_new_user( $user_id ) {
 	    $persona_code = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/persona_code.php';
 	    if (file_exists($persona_code)) {
-	        //require_once($persona_code);
-                echo "<h1>Fake Persona</h1>";
+	        require_once($persona_code);
+                //echo "<h1>Fake Persona</h1>";
 	    } else {
 	        echo "<h1>Error, $persona_code not found</h1>";
 	    }
@@ -261,7 +261,7 @@ class WpWithPersona {
 	 * @since    1.0.1
 	 */
 	function wp_withpersona_dashboard(){
-	 add_menu_page(__('Persona Dashboard','languages'), __('Persona Dashboard','languages'), 'manage_options', 'the-wp_withpersona-dashboard', array( $this, 'wp_withpersona_dashboard_page'), 'dashicons-id', 0 );
+	 add_menu_page(__('Persona Dashboard','wp-withpersona'), __('Persona Dashboard','wp-withpersona'), 'manage_options', 'the-wp_withpersona-dashboard', array( $this, 'wp_withpersona_dashboard_page'), 'dashicons-id', 0 );
 	}
 
 	/**
@@ -421,7 +421,7 @@ class WpWithPersona {
          * @since 1.0.0
          */
         public function __clone() {
-                _doing_it_wrong( __FUNCTION__, esc_html( __( 'Cloning of WpWithPersona is forbidden' ) ), esc_attr( $this->_version ) );
+                _doing_it_wrong( __FUNCTION__, esc_html( __( 'Cloning of WpWithPersona is forbidden', 'wp-withpersona' ) ), esc_attr( $this->_version ) );
 
         } // End __clone ()
 
@@ -432,7 +432,7 @@ class WpWithPersona {
          * @since 1.0.0
          */
         public function __wakeup() {
-                _doing_it_wrong( __FUNCTION__, esc_html( __( 'Unserializing instances of WpWithPersona is forbidden' ) ), esc_attr( $this->_version ) );
+                _doing_it_wrong( __FUNCTION__, esc_html( __( 'Unserializing instances of WpWithPersona is forbidden', 'wp-withpersona' ) ), esc_attr( $this->_version ) );
         } // End __wakeup ()
 
         /**

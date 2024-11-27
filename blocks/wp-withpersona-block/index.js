@@ -19,12 +19,12 @@
 	 * Every block starts by registering a new block type definition.
 	 * @see https://wordpress.org/gutenberg/handbook/designers-developers/developers/block-api/#registering-a-block
 	 */
-	registerBlockType( 'wpsheet/wpsheet-block', {
+	registerBlockType( 'wp-with-persona/wp-with-persona-block', {
 		/**
 		 * This is the display title for your block, which can be translated with `i18n` functions.
 		 * The block inserter will show this name.
 		 */
-		title: __( 'Wpsheet block', 'wpsheet' ),
+		title: __( 'WP-with-persona block', 'wp-with-persona' ),
 
 		/**
 		 * Blocks are grouped into categories to help users browse and discover them.
@@ -52,7 +52,7 @@
 			return el(
 				'p',
 				{ className: props.className },
-				__( 'Hello from the editor!', 'wpsheet' )
+				__( 'Hello from the editor!', 'wp-with-persona' )
 			);
 		},
 
@@ -67,7 +67,7 @@
 			return el(
 				'p',
 				{},
-				__( 'Hello from the saved content!', 'wpsheet' )
+				__( 'Hello from the saved content!', 'wp-with-persona' )
 			);
 		}
 	} );

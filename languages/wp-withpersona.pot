@@ -1,0 +1,191 @@
+# Copyright (C) 2024 Monsenhor
+# This file is distributed under the same license as the WP WithPersona package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP WithPersona 1.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-withpersona\n"
+"POT-Creation-Date: 2024-11-08 19:20:37+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2024-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-Country: United States\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: "
+"__;_e;_x:1,2c;_ex:1,2c;_n:1,2;_nx:1,2,4c;_n_noop:1,2;_nx_noop:1,2,3c;esc_"
+"attr__;esc_html__;esc_attr_e;esc_html_e;esc_attr_x:1,2c;esc_html_x:1,2c;\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-Bookmarks: \n"
+"X-Textdomain-Support: yes\n"
+"X-Generator: grunt-wp-i18n 1.0.3\n"
+
+#: admin/dashboard.php:3 includes/class-withpersona.php:264
+msgid "Persona Dashboard"
+msgstr ""
+
+#: includes/class-withpersona-admin-api.php:159
+msgid "Upload an image"
+msgstr ""
+
+#: includes/class-withpersona-admin-api.php:159
+msgid "Use image"
+msgstr ""
+
+#: includes/class-withpersona-admin-api.php:159
+msgid "Upload new image"
+msgstr ""
+
+#: includes/class-withpersona-admin-api.php:160
+msgid "Remove image"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:78
+#: includes/class-withpersona-settings.php:241
+msgid "WP With Persona Settings"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:108
+msgid "Settings"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:120
+msgid "Account"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:121
+msgid "Your account and keys at With Persona."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:125
+msgid "API Key"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:126
+msgid "Your API Key from Persona."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:129
+msgid "Your API Key"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:133
+msgid "API Password"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:134
+msgid "The password for the API."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:137
+msgid "**************"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:141
+msgid "Users Limit"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:142
+msgid "The maximum users per month."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:150
+msgid "Pages"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:151
+msgid "Pages where WithPersona will load"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:155
+msgid "Registration Page."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:156
+msgid "Use WP With Persona on the default Registration Page."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:162
+msgid "Administration Page."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:163
+msgid "Use WP With Persona on the WordPress administrative pages."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:169
+msgid "Add a page"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:170
+msgid "Add all pageswhere Persona tool will load."
+msgstr ""
+
+#: includes/class-withpersona-settings.php:173
+msgid "https://"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:296
+msgid "Save Settings"
+msgstr ""
+
+#: includes/class-withpersona-settings.php:327
+#: includes/class-withpersona-settings.php:336
+msgid "Cheatin&#8217; huh?"
+msgstr ""
+
+#: includes/class-withpersona.php:424
+msgid "Cloning of WpWithPersona is forbidden"
+msgstr ""
+
+#: includes/class-withpersona.php:435
+msgid "Unserializing instances of WpWithPersona is forbidden"
+msgstr ""
+
+#: includes/class-wp-with-persona-activator.php:43
+msgid ""
+"This plugin can not be activated because it requires a PHP version greater "
+"than \"). $php .__(\"Your PHP version can be updated by your hosting "
+"company."
+msgstr ""
+
+#: includes/class-wp-with-persona-activator.php:45
+#: includes/class-wp-with-persona-activator.php:55
+msgid "go back"
+msgstr ""
+
+#: includes/class-wp-with-persona-activator.php:54
+msgid ""
+"This plugin can not be activated because it requires a WordPress version "
+"greater than "
+msgstr ""
+
+#: includes/class-wp-with-persona-activator.php:54
+msgid ""
+"Please go to Dashboard &#9656; Updates to gran the latest version of "
+"WordPress ."
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "WP WithPersona"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://wpwithpersona.com/"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Integrates Woocommerce WordPress installation with Persona"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Monsenhor"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://kobkob.org/"
+msgstr ""

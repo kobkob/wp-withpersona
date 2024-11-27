@@ -1,6 +1,36 @@
 # Wordpress - ignore core, configuration, examples, uploads and logs.
 # https://github.com/github/gitignore/blob/main/WordPress.gitignore
 
+wordpress
+wordpress/*
+
+.babelrc
+.deployignore
+.distignore
+.editorconfig
+.eslintignore
+.eslintrc
+.gitignore
+.zipignore
+.DS_Store
+.*~
+Thumbs.db
+behat.yml
+bitbucket-pipelines.yml
+.circleci/config.yml
+composer.lock
+errors.txt
+package-lock.json
+wordpress
+wp-cli.local.yml
+yarn.lock
+tests
+vendor
+node_modules
+*.sql
+*.tar.gz
+*.zip
+
 # Core
 #
 # Note: if you want to stage/commit WP core files

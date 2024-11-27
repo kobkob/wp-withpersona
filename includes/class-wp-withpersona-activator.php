@@ -7,8 +7,8 @@
  * @link       http://kobkob.org
  * @since      1.0.1
  *
- * @package    WP_With_Persona
- * @subpackage WP_With_Persona/includes
+ * @package    WP_WithPersona
+ * @subpackage WP_WithPersona/includes
  */
 
 /**
@@ -17,11 +17,11 @@
  * This class defines all code necessary to run during the plugin's activation.
  *
  * @since      1.0.1
- * @package    WP_With_Persona
- * @subpackage WP_With_Persona/includes
+ * @package    WP_WithPersona
+ * @subpackage WP_WithPersona/includes
  * @author     Monsenhor <filipo@kobkob.org>
  */
-class WP_With_Persona_Activator {
+class WP_WithPersona_Activator {
 
 	/**
 	 * Activate the plugin.
@@ -40,9 +40,9 @@ class WP_With_Persona_Activator {
 
 		if ( version_compare( PHP_VERSION, $php, '<' ) ) {
 			deactivate_plugins( basename( __FILE__ ) );
-			$message = __( 'This plugin can not be activated because it requires a PHP version greater than "). $php .__("Your PHP version can be updated by your hosting company.', 'wp-form-plugin' );
+			$message = __( 'This plugin can not be activated because it requires a PHP version greater than "). $php .__("Your PHP version can be updated by your hosting company.', 'wp-withpersona' );
 			wp_die(
-				'<p>' . esc_html( $message ) . '</p> <a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">' . esc_html( __( 'go back', 'wp-form-plugin' ) ) . '</a>'
+				'<p>' . esc_html( $message ) . '</p> <a href="' . esc_url( admin_url( 'plugins.php' ) ) . '">' . esc_html( __( 'go back', 'wp-withpersona' ) ) . '</a>'
 			);
 		}
 
@@ -51,8 +51,8 @@ class WP_With_Persona_Activator {
 			wp_die(
 				esc_html(
 					'<p>' .
-					__( 'This plugin can not be activated because it requires a WordPress version greater than ' ) . $wp . __( 'Please go to Dashboard &#9656; Updates to gran the latest version of WordPress .', 'wp-form-plugin' ) .
-					'</p> <a href="' . admin_url( 'plugins.php' ) . '">' . __( 'go back', 'wp-form-plugin' ) . '</a>'
+					__( 'This plugin can not be activated because it requires a WordPress version greater than ', 'wp-withpersona' ) . $wp . __( 'Please go to Dashboard &#9656; Updates to gran the latest version of WordPress .', 'wp-withpersona' ) .
+					'</p> <a href="' . admin_url( 'plugins.php' ) . '">' . __( 'go back', 'wp-withpersona' ) . '</a>'
 				)
 			);
 		}
@@ -60,7 +60,7 @@ class WP_With_Persona_Activator {
 		/* Intalls the DB for user limit records */
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();
-		$table_name      = $wpdb->prefix . 'wp_with_persona';
+		$table_name      = $wpdb->prefix . 'wp_withpersona';
 
 		$sql = "CREATE TABLE $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,

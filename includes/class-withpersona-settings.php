@@ -153,14 +153,14 @@ class WpWithPersona_Settings {
 			       array(
 					'id' 			=> 'add_registration_page',
 					'label'			=> __( 'Registration Page.', 'wp-withpersona' ),
-					'description'	=> __( 'Use WP With Persona on the default Registration Page.' ),
+					'description'	=> __( 'Use WP With Persona on the default Registration Page.', 'wp-withpersona' ),
 					'type'			=> 'checkbox',
 					'default'		=> ''
 				),	
 			       array(
 					'id' 			=> 'add_admin_page',
 					'label'			=> __( 'Administration Page.', 'wp-withpersona' ),
-					'description'	=> __( 'Use WP With Persona on the WordPress administrative pages.' ),
+					'description'	=> __( 'Use WP With Persona on the WordPress administrative pages.', 'wp-withpersona' ),
 					'type'			=> 'checkbox',
 					'default'		=> ''
 				),	
@@ -324,7 +324,7 @@ class WpWithPersona_Settings {
 	 * @since 1.0.0
 	 */
 	public function __clone () {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?' ), $this->parent->_version );
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'wp-withpersona' ), $this->parent->_version );
 	} // End __clone()
 
 	/**
@@ -333,7 +333,7 @@ class WpWithPersona_Settings {
 	 * @since 1.0.0
 	 */
 	public function __wakeup () {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?' ), $this->parent->_version );
+		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'wp-withpersona' ), $this->parent->_version );
 	} // End __wakeup()
 
 }

@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name:     WP With Persona
+ * Plugin Name:     WP WithPersona
  * Plugin URI:      https://wpwithpersona.com/
  * Description:     Integrates Woocommerce WordPress installation with Persona
  * Author:          Monsenhor
  * Author URI:      https://kobkob.org/
  * Text Domain:     wp-withpersona
  * Domain Path:     /languages
- * Version:         1.0.1
+ * Version:         1.2.1
  *
- * @package         WP-WithPersona
+ * @package         wp-withpersona
  */
 
 // Your code starts here.
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Global Shortcodes
-define( 'WPWITHPERSONASHORTCODE', 'wpwpersona' );
+define( 'WPWITHPERSONASHORTCODE', 'wp_withpersona' );
 
 
 // Load plugin classes
@@ -35,7 +35,7 @@ require_once 'includes/class-withpersona-admin-api.php';
  * @since  1.0.0
  * @return object WP-WITHPERSONA
  */
-function wp_with_persona() {
+function wp_withpersona() {
         $instance = WpWithPersona::instance( __FILE__, '1.0.0' );
 
         if ( is_null( $instance->settings ) ) {
@@ -47,19 +47,19 @@ function wp_with_persona() {
 
 /**
  * The code that runs during plugin activation.
- * This action is documented in includes/class-wp-with-persona-activator.php
+ * This action is documented in includes/class-wp-withpersona-activator.php
  */
-function activate_wp_with_persona() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-with-persona-activator.php';
-	WP_With_Persona_Activator::activate();
+function activate_wp_withpersona() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-withpersona-activator.php';
+	WP_WithPersona_Activator::activate();
 }
 
 
-wp_with_persona();
+wp_withpersona();
 
-register_activation_hook( __FILE__, 'activate_wp_with_persona' );
+register_activation_hook( __FILE__, 'activate_wp_withpersona' );
 
-/*! \mainpage WordPress With Persona
+/*! \mainpage WP - With Persona 1.2.1
  *
  * - by Monsenhor
  *
@@ -71,8 +71,7 @@ register_activation_hook( __FILE__, 'activate_wp_with_persona' );
  *
  * \section intro_sec Introduction
  *
- * Custom plugin implementing a AQL server as a smart code 
- * It uses REST tools to integrate with a mojolicious webservice.
+ * Custom plugin implementing a simple integration for With Persona API.
  *
  * \section install_sec Installation
  *

@@ -1,6 +1,6 @@
 <div class="wrap">
 <?php
-echo "<h2>" . __( 'Persona Dashboard', 'wpp-menu' ) . "</h2>";
+echo "<h2>" . __( 'Persona Dashboard', 'wp-withpersona' ) . "</h2>";
 ///wp-admin/media-upload.php
 //$mimetypes = get_allowed_mime_types();
 //var_dump ($mimetypes);
