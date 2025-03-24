@@ -1,13 +1,13 @@
 <div class="wrap">
 <?php
-echo "<h2>" . __( 'Persona Dashboard', 'wpp-menu' ) . "</h2>";
-///wp-admin/media-upload.php
-//$mimetypes = get_allowed_mime_types();
-//var_dump ($mimetypes);
-?>  
+    echo "<h2>" . __('Persona Dashboard', 'wp-withpersona') . "</h2>";
+    ///wp-admin/media-upload.php
+    //$mimetypes = get_allowed_mime_types();
+    //var_dump ($mimetypes);
+?>
 
   <p><a href="/wp-admin/options-general.php?page=wp_with_persona_settings">Open Settings</a></p>
-  <div id="dashboard-widgets-wrap"> 
+  <div id="dashboard-widgets-wrap">
 
     <div id="dashboard-widgets" class="metabox-holder">
 
@@ -26,37 +26,37 @@ echo "<h2>" . __( 'Persona Dashboard', 'wpp-menu' ) . "</h2>";
 	<ul class="list-group wpp-topics">
 
 <?php
-    $the_users = get_users( array( 'role__in' => array( 'administrator', 'author', 'subscriber' ) ) );
-    foreach ( $the_users as $user ) :
-        $udata = get_userdata( $user->ID );
-        $registered = $udata->user_registered; 
-?>
-        <li class="list-group-item">
-            <a class="asciidoc-link" target="__blank" href="<?php echo ( esc_html( $user->user_url )); ?>"><?php  echo ( esc_html( $user->display_name ));  ?></a> Since <?php echo date( "M Y", strtotime( $registered ) ) ?> &nbsp;
-	    <button user_id="<?php echo $user->get('ID'); ?>" class="wpp-show-user button wpp-button-small button-primary">Details</button>
-	
-	</li>
+    $the_users = get_users(['role__in' => ['administrator', 'author', 'subscriber']]);
+    foreach ($the_users as $user):
+        $udata      = get_userdata($user->ID);
+        $registered = $udata->user_registered;
+    ?>
+	        <li class="list-group-item">
+	            <a class="asciidoc-link" target="__blank" href="<?php echo(esc_html($user->user_url)); ?>"><?php echo(esc_html($user->display_name)); ?></a> Since<?php echo date("M Y", strtotime($registered)) ?> &nbsp;
+		    <button user_id="<?php echo $user->get('ID'); ?>" class="wpp-show-user button wpp-button-small button-primary">Details</button>
 
-<div id="details-user-<?php echo $user->get('ID'); ?>" class="detail-panel">
-<table class="wpp-userdetails-table">
-<tr class="wpp-table-first-row">
-<td colspan="2">Basic data</td>
-</tr>
+		</li>
 
-<?php if ( $user->get('display_name') ): ?>
-<tr class="wpp-class-odd">
-<td>Name:
-</td>
-<td><?php echo ( esc_html( $user->get('display_name') ) ); ?>
-</td>
-</tr>
-<?php endif; ?>
+	<div id="details-user-<?php echo $user->get('ID'); ?>" class="detail-panel">
+	<table class="wpp-userdetails-table">
+	<tr class="wpp-table-first-row">
+	<td colspan="2">Basic data</td>
+	</tr>
 
-<?php if ( $user->get('user_email') ): ?>
+	<?php if ($user->get('display_name')): ?>
+	<tr class="wpp-class-odd">
+	<td>Name:
+	</td>
+	<td><?php echo(esc_html($user->get('display_name'))); ?>
+	</td>
+	</tr>
+	<?php endif; ?>
+
+<?php if ($user->get('user_email')): ?>
 <tr class="wpp-class-even">
 <td>Email:
 </td>
-<td><?php echo ( esc_html( $user->get('user_email') ) ); ?>
+<td><?php echo(esc_html($user->get('user_email'))); ?>
 </td>
 </tr>
 <?php endif; ?>
@@ -66,26 +66,26 @@ echo "<h2>" . __( 'Persona Dashboard', 'wpp-menu' ) . "</h2>";
 </tr>
 
 
-<?php  
-$class_even = "table-class-even";
-$class_odd = "table-class-odd";
-$metas = get_user_meta( $user->get('ID') );
-$class_i = $class_odd;
-foreach ( $metas as $name=>$value ):
-if ($value[0]):
-?>
-<tr class="<?php echo $class_i; ?>">
-<td><?php echo ( esc_html( $name ) ); ?>
-</td>
-<td><?php 
-foreach ($value as $val){
-    echo '<span class="wpp-user-meta">' . ( esc_html( $val ) ) . "</span>";
-}
-$class_i = ($class_i == $class_odd) ? $class_even : $class_odd;
-?>
-</td>
-</tr>
-<?php endif; endforeach; ?>
+<?php
+    $class_even = "table-class-even";
+    $class_odd  = "table-class-odd";
+    $metas      = get_user_meta($user->get('ID'));
+    $class_i    = $class_odd;
+    foreach ($metas as $name => $value):
+        if ($value[ 0 ]):
+    ?>
+	<tr class="<?php echo $class_i; ?>">
+	<td><?php echo(esc_html($name)); ?>
+	</td>
+	<td><?php
+                foreach ($value as $val) {
+                    echo '<span class="wpp-user-meta">' . (esc_html($val)) . "</span>";
+                }
+                $class_i = ($class_i == $class_odd) ? $class_even : $class_odd;
+            ?>
+	</td>
+	</tr>
+	<?php endif;endforeach; ?>
 
 
 </table>
@@ -107,10 +107,10 @@ $class_i = ($class_i == $class_odd) ? $class_even : $class_odd;
 
 
      </div>
- 
+
   </div>
 </div>
-<div id="registration-url">Registration URL: <?php echo wp_registration_url(); ?></div>
+<div id="registration-url">Registration URL:                                             <?php echo wp_registration_url(); ?></div>
 
 <!--
 <div id="upload-dialog">
@@ -146,7 +146,7 @@ jQuery(document).ready(function ($) {
 	function uploadFiles(formData){
 	    console.log(formData);
 	}
-});	    
+});
 
 
 

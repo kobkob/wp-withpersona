@@ -1,0 +1,28 @@
+{
+  "name": "wp-withpersona",
+  "version": "1.2.1",
+  "description": "Plugin to integrate a WordPress website with WP With Persona.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "node ./tests/001-testall.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kobkob/wp-withpersona.git"
+  },
+  "keywords": [
+    "privacy",
+    "security",
+    "indentification"
+  ],
+  "author": "Monsenhor",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/kobkob/wp-withpersona/issues"
+  },
+  "homepage": "https://github.com/kobkob/wp-withpersona#readme"
+}
