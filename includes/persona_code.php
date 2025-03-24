@@ -5,21 +5,21 @@
 
 <script>
 
-  const client = new Persona.Client({
+	const client = new Persona.Client({
 
-    templateId: 'itmpl_1k5CoM5gd1oo2cbxn1zdZnWZ',
+	templateId: 'itmpl_1k5CoM5gd1oo2cbxn1zdZnWZ',
 
-    environmentId: 'env_9tVLdprhMFNx9fHSPZe7HUPM',
+	environmentId: 'env_9tVLdprhMFNx9fHSPZe7HUPM',
 
-    onReady: () => client.open(),
+	onReady: () => client.open(),
 
-    onComplete: ({ inquiryId, status, fields }) => {
+	onComplete: ({ inquiryId, status, fields }) => {
 
-      console.log(`Completed inquiry ${inquiryId} with status ${status}`);
+		console.log(`Completed inquiry ${inquiryId} with status ${status}`);
 
-    }
+	}
 
-  });
+	});
 
 </script>
 <?php

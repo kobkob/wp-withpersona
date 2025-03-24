@@ -14,12 +14,12 @@
 
 // Your code starts here.
 
-if (! defined('ABSPATH')) {
-    exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
 }
 
 // Global Shortcodes
-define('WPWITHPERSONASHORTCODE', 'wp_withpersona');
+define( 'WPWITHPERSONASHORTCODE', 'wp_withpersona' );
 
 // Load plugin classes
 //
@@ -34,32 +34,31 @@ require_once 'includes/class-withpersona-admin-api.php';
  * @since  1.0.0
  * @return object WP-WITHPERSONA
  */
-function wp_withpersona()
-{
-    $instance = WpWithPersona::instance(__FILE__, '1.0.0');
+function wp_withpersona() {
+	$instance = WpWithPersona::instance( __FILE__, '1.0.0' );
 
-    if (is_null($instance->settings)) {
-        $instance->settings = WpWithPersona_Settings::instance($instance);
-    }
+	if ( is_null( $instance->settings ) ) {
+		$instance->settings = WpWithPersona_Settings::instance( $instance );
+	}
 
-    return $instance;
+	return $instance;
 }
 
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-wp-withpersona-activator.php
  */
-function activate_wp_withpersona()
-{
-    require_once plugin_dir_path(__FILE__) . 'includes/class-wp-withpersona-activator.php';
-    WP_WithPersona_Activator::activate();
+function activate_wp_withpersona() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-withpersona-activator.php';
+	WP_WithPersona_Activator::activate();
 }
 
 wp_withpersona();
 
-register_activation_hook(__FILE__, 'activate_wp_withpersona');
+register_activation_hook( __FILE__, 'activate_wp_withpersona' );
 
-/*! \mainpage WP - With Persona 1.2.1
+/*
+! \mainpage WP - With Persona 1.2.1
  *
  * - by Monsenhor
  *

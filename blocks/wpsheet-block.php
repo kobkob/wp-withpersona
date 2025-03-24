@@ -17,17 +17,17 @@ function wpsheet_block_block_init() {
 	if ( ! function_exists( 'register_block_type' ) ) {
 		return;
 	}
-	$dir = dirname( __FILE__ );
+	$dir = __DIR__;
 
 	$index_js = 'wpsheet-block/index.js';
 	wp_register_script(
 		'wpsheet-block-block-editor',
 		plugins_url( $index_js, __FILE__ ),
-		[
+		array(
 			'wp-blocks',
 			'wp-i18n',
 			'wp-element',
-		],
+		),
 		filemtime( "{$dir}/{$index_js}" )
 	);
 
@@ -35,7 +35,7 @@ function wpsheet_block_block_init() {
 	wp_register_style(
 		'wpsheet-block-block-editor',
 		plugins_url( $editor_css, __FILE__ ),
-		[],
+		array(),
 		filemtime( "{$dir}/{$editor_css}" )
 	);
 
@@ -43,15 +43,18 @@ function wpsheet_block_block_init() {
 	wp_register_style(
 		'wpsheet-block-block',
 		plugins_url( $style_css, __FILE__ ),
-		[],
+		array(),
 		filemtime( "{$dir}/{$style_css}" )
 	);
 
-	register_block_type( 'wpsheet/wpsheet-block', [
-		'editor_script' => 'wpsheet-block-block-editor',
-		'editor_style'  => 'wpsheet-block-block-editor',
-		'style'         => 'wpsheet-block-block',
-	] );
+	register_block_type(
+		'wpsheet/wpsheet-block',
+		array(
+			'editor_script' => 'wpsheet-block-block-editor',
+			'editor_style'  => 'wpsheet-block-block-editor',
+			'style'         => 'wpsheet-block-block',
+		)
+	);
 }
 
 add_action( 'init', 'wpsheet_block_block_init' );

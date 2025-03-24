@@ -4,4 +4,4 @@
 
 <?php
 
-echo "<h3>Go ahead!!!</h3>";
+echo '<h3>Go ahead!!!</h3>';
