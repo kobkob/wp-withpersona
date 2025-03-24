@@ -1,0 +1,51 @@
+/* settings */
+.wpp-multitext {
+	width: fit-content;
+	border-style: solid;
+	padding: 9px;
+	border-radius: 5px;
+	border-color: #b0b0b0;
+	border-width: thin;
+}
+.wpp-multitext li {
+	margin: 7px;
+	list-style: none;
+}
+.wpp-multitext-item input {
+	width: 45em;
+}
+.wpp-multitext-btn {
+	font-size: 21px;
+	display: grid;
+	margin-top: 8px;
+	margin-bottom: 8px;
+	margin-left: 100px;
+	margin-right: 100px;
+}
+/* dashboard */
+.wpp-userdetails-table {
+	/* border: grey; */
+	background: #eee;
+	display: block;
+}
+.wpp-table-first-row td {
+	background: #c0c0c0;
+	display: table-cell;
+	font-size: large;
+}
+#postbox-container-wpp-users {
+	width: 100% !important;
+}
+.card.col-12.mt-20.mx-auto.wpp-users {
+	max-width: 100%;
+        border:none;
+}
+.card.col-4.mt-20.mx-auto.wpp-users {
+	border: none;
+}
+.table-class-odd {
+	background: #dfdfdf;
+}
+.table-class-even {
+	background: #fff;
+}
