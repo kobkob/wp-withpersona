@@ -180,7 +180,7 @@ class WpWithPersona_Settings {
 				array(
 					'id'          => 'add_page_btn',
 					'label'       => __( 'Add a page', 'wp-withpersona' ),
-					'description' => __( 'Add all pageswhere Persona tool will load.', 'wp-withpersona' ),
+					'description' => __( 'Add all pages where Persona tool will load.', 'wp-withpersona' ),
 					'type'        => 'text_multi',
 					'default'     => '',
 					'placeholder' => __( 'https://', 'wp-withpersona' ),
@@ -205,7 +205,7 @@ class WpWithPersona_Settings {
 			if ( isset( $_POST['tab'] ) && $_POST['tab'] ) {
 				$current_section = $_POST['tab'];
 			} elseif ( isset( $_GET['tab'] ) && $_GET['tab'] ) {
-					$current_section = $_GET['tab'];
+				$current_section = $_GET['tab'];
 			}
 
 			foreach ( $this->settings as $section => $data ) {
@@ -287,7 +287,7 @@ class WpWithPersona_Settings {
 						$class .= ' nav-tab-active';
 					}
 				} elseif ( isset( $_GET['tab'] ) && $section == $_GET['tab'] ) {
-						$class .= ' nav-tab-active';
+					$class .= ' nav-tab-active';
 				}
 
 				// Set tab link
