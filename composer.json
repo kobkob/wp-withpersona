@@ -1,12 +1,15 @@
 {
-    "require-dev": {
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
-        "phpcompatibility/phpcompatibility-wp": "*",
-        "wp-coding-standards/wpcs": "^3.1"
-    },
-    "config": {
-        "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
+  "scripts": {
+    "format": "./vendor/bin/phpcbf ."
+  },
+  "require-dev": {
+    "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
+    "phpcompatibility/phpcompatibility-wp": "*",
+    "wp-coding-standards/wpcs": "^3.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
     }
+  }
 }
