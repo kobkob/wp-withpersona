@@ -1,0 +1,80 @@
+name: Deploy WordPress Plugin
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          tools: composer:v2
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Generate Autoloader
+        run: composer dump-autoload -o
+
+      - name: Create Plugin ZIP
+        run: |
+          zip -r plugin.zip . -x "*.git*" "*.github*" "node_modules/*" "*.DS_Store*" "composer.*"
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Deploy to Server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PASS: ${{ secrets.SSH_PASS }}
+          WP_PLUGIN_PATH: "/home/150573401/htdocs/wp-content/plugins/wp-withpersona"
+        run: |
+          export SSHPASS=$SSH_PASS
+
+          echo "Copying plugin.zip to remote server..."
+          sshpass -e scp -o StrictHostKeyChecking=no plugin.zip $SSH_USER@$SSH_HOST:/tmp/plugin.zip || {
+            echo "Failed to copy plugin.zip to remote server"
+            exit 1
+          }
+
+          echo "Executing remote commands..."
+          sshpass -e ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'bash -s' << 'EOSSH'
+            set -e
+            echo "Starting remote deployment..."
+            WP_PLUGIN_PATH="/home/150573401/htdocs/wp-content/plugins/wp-withpersona"
+
+            if [ ! -f /tmp/plugin.zip ]; then
+              echo "Error: plugin.zip not found in /tmp"
+              exit 1
+            fi
+
+            echo "Unzipping plugin..."
+            unzip -o /tmp/plugin.zip -d /tmp/plugin
+
+            echo "Creating plugin directory if it doesn't exist..."
+            mkdir -p "$(dirname "$WP_PLUGIN_PATH")"
+
+            echo "Removing old plugin directory if it exists..."
+            rm -rf "$WP_PLUGIN_PATH"
+
+            echo "Moving new plugin files..."
+            mv /tmp/plugin "$WP_PLUGIN_PATH"
+
+            echo "Cleaning up..."
+            rm /tmp/plugin.zip
+
+            echo "Deployment completed successfully!"
+          EOSSH
+
+      - name: Clean Up
+        run: rm -f plugin.zip
