@@ -6,7 +6,7 @@
 	// var_dump ($mimetypes);
 ?>
 
-	<p><a href="/wp-admin/options-general.php?page=wp_with_persona_settings">Open Settings</a></p>
+	<p><a href="/wp-admin/admin.php?page=wp-withpersona-settings">Open Settings</a></p>
 	<div id="dashboard-widgets-wrap">
 
 	<div id="dashboard-widgets" class="metabox-holder">

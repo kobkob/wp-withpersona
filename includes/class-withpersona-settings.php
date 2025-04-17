@@ -85,7 +85,14 @@ class WpWithPersona_Settings {
 	 * @return void
 	 */
 	public function add_menu_item() {
-		$page = add_options_page( __( 'WP With Persona Settings', 'wp-withpersona' ), __( 'WP With Persona Settings', 'wp-withpersona' ), 'manage_options', $this->parent->_token . '_settings', array( $this, 'settings_page' ) );
+		$page = add_submenu_page(
+			'wp_withpersona-dashboard',
+			__( 'Settings', 'wp-withpersona' ),
+			__( 'Settings', 'wp-withpersona' ),
+			'manage_options',
+			'wp-withpersona-settings',
+			array( $this, 'settings_page' )
+		);
 		add_action( 'admin_print_styles-' . $page, array( $this, 'settings_assets' ) );
 	}
 
@@ -116,8 +123,7 @@ class WpWithPersona_Settings {
 	 * @return array         Modified links
 	 */
 	public function add_settings_link( $links ) {
-		// $this->default_tab = $this->default_tab ? $this->default_tab : 'account';
-		$settings_link = '<a href="options-general.php?page=' . $this->parent->_token . '_settings&tab=' . $this->$default_tab . '>' . __( 'Settings', 'wp-withpersona' ) . '</a>';
+		$settings_link = '<a href="admin.php?page=wp-withpersona-settings">' . __( 'Settings', 'wp-withpersona' ) . '</a>';
 		array_push( $links, $settings_link );
 		return $links;
 	}
@@ -140,6 +146,22 @@ class WpWithPersona_Settings {
 					'type'        => 'text',
 					'default'     => '',
 					'placeholder' => __( 'Your API Key', 'wp-withpersona' ),
+				),
+				array(
+					'id'          => 'api_template_id', // WP_WITH_PERSONA_TEMPLATE_ID
+					'label'       => __( 'Persona Template ID', 'wp-withpersona' ),
+					'description' => __( 'Your Persona Template ID from Persona.', 'wp-withpersona' ),
+					'type'        => 'text',
+					'default'     => '',
+					'placeholder' => __( 'Your Persona Template ID', 'wp-withpersona' ),
+				),
+				array(
+					'id'          => 'api_environment_id', // WP_WITH_PERSONA_ENVIRONMENT_ID
+					'label'       => __( 'Persona Environment ID', 'wp-withpersona' ),
+					'description' => __( 'Your Persona Environment ID from Persona.', 'wp-withpersona' ),
+					'type'        => 'text',
+					'default'     => '',
+					'placeholder' => __( 'Your Persona Environment ID', 'wp-withpersona' ),
 				),
 				array(
 					'id'          => 'api_password',
