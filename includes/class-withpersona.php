@@ -152,7 +152,7 @@ class WpWithPersona {
 		// Persona workflow
 		add_action( 'register_form', array( $this, 'wp_withpersona_new_user' ), 0, 1 );
 		add_action( 'register_post', array( $this, 'wp_withpersona_register_user_post' ), 10, 1 );
-		add_action( 'user_register', array( $this, 'wp_withpersona_user_register' ), 10, 1 );
+		// add_action( 'user_register', array( $this, 'wp_withpersona_user_register' ), 10, 1 );
 		add_action( 'register_new_user', array( $this, 'wp_withpersona_new_user_register' ), 10, 1 );
 
 		// Shortcode
