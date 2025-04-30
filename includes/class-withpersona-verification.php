@@ -68,21 +68,30 @@ class WpWithPersona_Verification
 		add_action('wp_ajax_update_user_verification_status', array($this, 'handle_update_user_verification_status'));
 
 		// Check if required settings are configured
-		add_action('admin_notices', array($this, 'check_required_settings'));
+		add_action('admin_notices', array($this, 'check_required_settings_notice'));
+	}
+
+	private function check_required_settings()
+	{
+		$template_id    = get_option('wpwithpersona_api_template_id');
+		$environment_id = get_option('wpwithpersona_api_environment_id');
+		$api_key        = get_option('wpwithpersona_api_key');
+
+		if (empty($template_id) || empty($environment_id) || empty($api_key)) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
 	 * Check if required settings are configured
 	 */
-	public function check_required_settings()
+	public function check_required_settings_notice()
 	{
-		$template_id    = get_option('wpwithpersona_api_template_id');
-		$environment_id = get_option('wpwithpersona_api_environment_id');
-
-		if (empty($template_id) || empty($environment_id)) {
+		if (!$this->check_required_settings()) {
 ?>
 			<div class="notice notice-warning">
-				<p><?php esc_html_e('Persona verification requires configuration. Please set up your Template ID and Environment ID in the settings.', 'wp-withpersona'); ?></p>
+				<p><?php esc_html_e('Persona verification requires configuration. Please set up your Template ID, Environment ID, and API Key in the settings.', 'wp-withpersona'); ?></p>
 				<p>
 					<a href="<?php echo esc_url(admin_url('admin.php?page=wp-withpersona-settings')); ?>" class="button button-primary">
 						<?php esc_html_e('Configure Settings', 'wp-withpersona'); ?>
@@ -105,10 +114,6 @@ class WpWithPersona_Verification
 		$template_id    = get_option('wpwithpersona_api_template_id');
 		$environment_id = get_option('wpwithpersona_api_environment_id');
 
-		if (empty($api_key) || empty($template_id) || empty($environment_id)) {
-			return false;
-		}
-
 		$user = get_user_by('id', $user_id);
 		if (! $user) {
 			return false;
@@ -120,23 +125,19 @@ class WpWithPersona_Verification
 
 		// If we checked recently (within last hour), return cached status
 		if ($verification_status && $last_checked && (time() - $last_checked) < 3600) {
-			return $verification_status === 'verified';
+			return $verification_status === 'completed';
 		}
 
+		$last_checked_date = date('Y-m-d\TH:i:s.v\Z', $last_checked);
+
 		// Make API call to Persona to verify user
-		$response = wp_remote_post(
-			'https://withpersona.com/api/v1/verifications',
+
+		$response = wp_remote_get(
+			"https://withpersona.com/api/v1/inquiries?filter[reference-id]=$user_id&filter[inquiry-template-id]=$template_id&filter[created-at-start]=$last_checked_date",
 			array(
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $api_key,
 					'Content-Type'  => 'application/json',
-				),
-				'body'    => json_encode(
-					array(
-						'template_id'    => $template_id,
-						'environment_id' => $environment_id,
-						'email'          => $user->user_email,
-					)
 				),
 			)
 		);
@@ -145,12 +146,19 @@ class WpWithPersona_Verification
 			return false;
 		}
 
+		error_log('response: ' . print_r($response, true));
+
 		$body        = json_decode(wp_remote_retrieve_body($response), true);
 		$is_verified = isset($body['status']) && $body['status'] === 'verified';
 
 		// Update user meta with verification status
 		update_user_meta($user_id, 'persona_verification_status', $is_verified ? 'verified' : 'unverified');
 		update_user_meta($user_id, 'persona_verification_last_checked', time());
+
+		// Update verification timestamp whenever user becomes verified
+		if ($is_verified) {
+			update_user_meta($user_id, 'persona_verification_timestamp', time());
+		}
 
 		return $is_verified;
 	}
@@ -187,6 +195,9 @@ class WpWithPersona_Verification
 	{
 		if (is_user_logged_in()) {
 			$user_id = get_current_user_id();
+			if (!$this->check_required_settings()) {
+				return;
+			}
 			if (! $this->is_user_verified($user_id)) {
 				// Add notice for unverified users
 				add_action(
@@ -214,6 +225,7 @@ class WpWithPersona_Verification
 	{
 		add_user_meta($user_id, 'persona_verification_status', 'unverified');
 		add_user_meta($user_id, 'persona_verification_last_checked', 0);
+		add_user_meta($user_id, 'persona_verification_timestamp', 0); // When they were actually verified
 	}
 
 	/**
@@ -285,8 +297,12 @@ class WpWithPersona_Verification
 				<td>
 					<?php
 					$verification_status = get_user_meta($user->ID, 'persona_verification_status', true);
+					$verification_time = get_user_meta($user->ID, 'persona_verification_timestamp', true);
 					if ($verification_status === 'verified') {
 						echo '<span class="dashicons dashicons-yes-alt" style="color: #46b450;"></span> ' . esc_html__('Verified', 'wp-withpersona');
+						if ($verification_time) {
+							echo '<p class="description">' . esc_html__('Verified on: ', 'wp-withpersona') . date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $verification_time) . '</p>';
+						}
 					} else {
 						echo '<span class="dashicons dashicons-warning" style="color: #ffb900;"></span> ' . esc_html__('Not Verified', 'wp-withpersona');
 						echo '<p class="description"><a href="' . esc_url($this->get_verification_page_url()) . '">' . esc_html__('Complete verification', 'wp-withpersona') . '</a></p>';
