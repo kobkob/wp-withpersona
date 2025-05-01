@@ -112,7 +112,7 @@ class WpWithPersona_Verification
 	{
 		$api_key        = get_option('wpwithpersona_api_key');
 		$template_id    = get_option('wpwithpersona_api_template_id');
-		$environment_id = get_option('wpwithpersona_api_environment_id');
+		// $environment_id = get_option('wpwithpersona_api_environment_id');
 
 		$user = get_user_by('id', $user_id);
 		if (! $user) {
@@ -127,8 +127,6 @@ class WpWithPersona_Verification
 		if ($verification_status && $last_checked && (time() - $last_checked) < 3600) {
 			return $verification_status === 'approved';
 		}
-
-		$last_checked_date = date('Y-m-d\TH:i:s.v\Z', $last_checked);
 
 		// Make API call to Persona to verify user
 		// &filter[created-at-start]=$last_checked_date
