@@ -1,10 +1,11 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
-class WpWithPersona_Settings {
+class WpWithPersona_Settings
+{
 
 
 	/**
@@ -52,22 +53,23 @@ class WpWithPersona_Settings {
 	 */
 	public $default_tab = 'account';
 
-	public function __construct( $parent ) {
+	public function __construct($parent)
+	{
 		$this->parent = $parent;
 
 		$this->base = 'wpwithpersona_';
 
 		// Initialise settings
-		add_action( 'init', array( $this, 'init_settings' ), 11 );
+		add_action('init', array($this, 'init_settings'), 11);
 
 		// Register plugin settings
-		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action('admin_init', array($this, 'register_settings'));
 
 		// Add settings page to menu
-		add_action( 'admin_menu', array( $this, 'add_menu_item' ) );
+		add_action('admin_menu', array($this, 'add_menu_item'));
 
 		// Add settings link to plugins page
-		add_filter( 'plugin_action_links_' . plugin_basename( $this->parent->file ), array( $this, 'add_settings_link' ) );
+		add_filter('plugin_action_links_' . plugin_basename($this->parent->file), array($this, 'add_settings_link'));
 	}
 
 	/**
@@ -75,7 +77,8 @@ class WpWithPersona_Settings {
 	 *
 	 * @return void
 	 */
-	public function init_settings() {
+	public function init_settings()
+	{
 		$this->settings = $this->settings_fields();
 	}
 
@@ -84,16 +87,17 @@ class WpWithPersona_Settings {
 	 *
 	 * @return void
 	 */
-	public function add_menu_item() {
+	public function add_menu_item()
+	{
 		$page = add_submenu_page(
 			'wp_withpersona-dashboard',
-			__( 'Settings', 'wp-withpersona' ),
-			__( 'Settings', 'wp-withpersona' ),
+			__('Settings', 'wp-withpersona'),
+			__('Settings', 'wp-withpersona'),
 			'manage_options',
 			'wp-withpersona-settings',
-			array( $this, 'settings_page' )
+			array($this, 'settings_page')
 		);
-		add_action( 'admin_print_styles-' . $page, array( $this, 'settings_assets' ) );
+		add_action('admin_print_styles-' . $page, array($this, 'settings_assets'));
 	}
 
 	/**
@@ -101,19 +105,20 @@ class WpWithPersona_Settings {
 	 *
 	 * @return void
 	 */
-	public function settings_assets() {
+	public function settings_assets()
+	{
 
 		// We're including the farbtastic script & styles here because they're needed for the colour picker
 		// If you're not including a colour picker field then you can leave these calls out as well as the farbtastic dependency for the wpt-admin-js script below
-		wp_enqueue_style( 'farbtastic' );
-		wp_enqueue_script( 'farbtastic' );
+		wp_enqueue_style('farbtastic');
+		wp_enqueue_script('farbtastic');
 
 		// We're including the WP media scripts here because they're needed for the image upload field
 		// If you're not including an image upload then you can leave this function call out
 		wp_enqueue_media();
 
-		wp_register_script( $this->parent->_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', array( 'farbtastic', 'jquery' ), '1.0.0' );
-		wp_enqueue_script( $this->parent->_token . '-settings-js' );
+		wp_register_script($this->parent->_token . '-settings-js', $this->parent->assets_url . 'js/settings' . $this->parent->script_suffix . '.js', array('farbtastic', 'jquery'), '1.0.0');
+		wp_enqueue_script($this->parent->_token . '-settings-js');
 	}
 
 	/**
@@ -122,9 +127,10 @@ class WpWithPersona_Settings {
 	 * @param  array $links Existing links
 	 * @return array         Modified links
 	 */
-	public function add_settings_link( $links ) {
-		$settings_link = '<a href="admin.php?page=wp-withpersona-settings">' . __( 'Settings', 'wp-withpersona' ) . '</a>';
-		array_push( $links, $settings_link );
+	public function add_settings_link($links)
+	{
+		$settings_link = '<a href="admin.php?page=wp-withpersona-settings">' . __('Settings', 'wp-withpersona') . '</a>';
+		array_push($links, $settings_link);
 		return $links;
 	}
 
@@ -133,48 +139,49 @@ class WpWithPersona_Settings {
 	 *
 	 * @return array Fields to be displayed on settings page
 	 */
-	private function settings_fields() {
+	private function settings_fields()
+	{
 		// $this->default_tab = 'account';
 		$settings['account'] = array(
-			'title'       => __( 'Account', 'wp-withpersona' ),
-			'description' => __( 'Your account and keys at With Persona.', 'wp-withpersona' ),
+			'title'       => __('Account', 'wp-withpersona'),
+			'description' => __('Your account and keys at With Persona.', 'wp-withpersona'),
 			'fields'      => array(
 				array(
 					'id'          => 'api_key',
-					'label'       => __( 'API Key', 'wp-withpersona' ),
-					'description' => __( 'Your API Key from Persona.', 'wp-withpersona' ),
+					'label'       => __('API Key', 'wp-withpersona'),
+					'description' => __('Your API Key from Persona.', 'wp-withpersona'),
 					'type'        => 'text',
 					'default'     => '',
-					'placeholder' => __( 'Your API Key', 'wp-withpersona' ),
+					'placeholder' => __('Your API Key', 'wp-withpersona'),
 				),
 				array(
 					'id'          => 'api_template_id', // WP_WITH_PERSONA_TEMPLATE_ID
-					'label'       => __( 'Persona Template ID', 'wp-withpersona' ),
-					'description' => __( 'Your Persona Template ID from Persona.', 'wp-withpersona' ),
+					'label'       => __('Persona Template ID', 'wp-withpersona'),
+					'description' => __('Your Persona Template ID from Persona.', 'wp-withpersona'),
 					'type'        => 'text',
 					'default'     => '',
-					'placeholder' => __( 'Your Persona Template ID', 'wp-withpersona' ),
+					'placeholder' => __('Your Persona Template ID', 'wp-withpersona'),
 				),
 				array(
 					'id'          => 'api_environment_id', // WP_WITH_PERSONA_ENVIRONMENT_ID
-					'label'       => __( 'Persona Environment ID', 'wp-withpersona' ),
-					'description' => __( 'Your Persona Environment ID from Persona.', 'wp-withpersona' ),
+					'label'       => __('Persona Environment ID', 'wp-withpersona'),
+					'description' => __('Your Persona Environment ID from Persona.', 'wp-withpersona'),
 					'type'        => 'text',
 					'default'     => '',
-					'placeholder' => __( 'Your Persona Environment ID', 'wp-withpersona' ),
+					'placeholder' => __('Your Persona Environment ID', 'wp-withpersona'),
 				),
 				array(
 					'id'          => 'api_password',
-					'label'       => __( 'API Password', 'wp-withpersona' ),
-					'description' => __( 'The password for the API.', 'wp-withpersona' ),
+					'label'       => __('API Password', 'wp-withpersona'),
+					'description' => __('The password for the API.', 'wp-withpersona'),
 					'type'        => 'text',
 					'default'     => '',
-					'placeholder' => __( '**************', 'wp-withpersona' ),
+					'placeholder' => __('**************', 'wp-withpersona'),
 				),
 				array(
 					'id'          => 'limit_uers',
-					'label'       => __( 'Users Limit', 'wp-withpersona' ),
-					'description' => __( 'The maximum users per month.', 'wp-withpersona' ),
+					'label'       => __('Users Limit', 'wp-withpersona'),
+					'description' => __('The maximum users per month.', 'wp-withpersona'),
 					'type'        => 'number',
 					'default'     => 50,
 				),
@@ -182,34 +189,34 @@ class WpWithPersona_Settings {
 			),
 		);
 		$settings['pages'] = array(
-			'title'       => __( 'Pages', 'wp-withpersona' ),
-			'description' => __( 'Pages where WithPersona will load', 'wp-withpersona' ),
+			'title'       => __('Pages', 'wp-withpersona'),
+			'description' => __('Pages where WithPersona will load', 'wp-withpersona'),
 			'fields'      => array(
 				array(
 					'id'          => 'add_registration_page',
-					'label'       => __( 'Registration Page.', 'wp-withpersona' ),
-					'description' => __( 'Use WP With Persona on the default Registration Page.', 'wp-withpersona' ),
+					'label'       => __('Registration Page.', 'wp-withpersona'),
+					'description' => __('Use WP With Persona on the default Registration Page.', 'wp-withpersona'),
 					'type'        => 'checkbox',
 					'default'     => '',
 				),
 				array(
 					'id'          => 'add_admin_page',
-					'label'       => __( 'Administration Page.', 'wp-withpersona' ),
-					'description' => __( 'Use WP With Persona on the WordPress administrative pages.', 'wp-withpersona' ),
+					'label'       => __('Administration Page.', 'wp-withpersona'),
+					'description' => __('Use WP With Persona on the WordPress administrative pages.', 'wp-withpersona'),
 					'type'        => 'checkbox',
 					'default'     => '',
 				),
 				array(
 					'id'          => 'add_page_btn',
-					'label'       => __( 'Add a page', 'wp-withpersona' ),
-					'description' => __( 'Add all pages where Persona tool will load.', 'wp-withpersona' ),
+					'label'       => __('Add a page', 'wp-withpersona'),
+					'description' => __('Add all pages where Persona tool will load.', 'wp-withpersona'),
 					'type'        => 'text_multi',
 					'default'     => '',
-					'placeholder' => __( 'https://', 'wp-withpersona' ),
+					'placeholder' => __('https://', 'wp-withpersona'),
 				),
 			),
 		);
-		$settings          = apply_filters( $this->parent->_token . '_settings_fields', $settings );
+		$settings          = apply_filters($this->parent->_token . '_settings_fields', $settings);
 
 		return $settings;
 	}
@@ -219,42 +226,43 @@ class WpWithPersona_Settings {
 	 *
 	 * @return void
 	 */
-	public function register_settings() {
-		if ( is_array( $this->settings ) ) {
+	public function register_settings()
+	{
+		if (is_array($this->settings)) {
 
 			// Check posted/selected tab
 			$current_section = '';
-			if ( isset( $_POST['tab'] ) && $_POST['tab'] ) {
+			if (isset($_POST['tab']) && $_POST['tab']) {
 				$current_section = $_POST['tab'];
-			} elseif ( isset( $_GET['tab'] ) && $_GET['tab'] ) {
+			} elseif (isset($_GET['tab']) && $_GET['tab']) {
 				$current_section = $_GET['tab'];
 			}
 
-			foreach ( $this->settings as $section => $data ) {
-				if ( $current_section && $current_section != $section ) {
+			foreach ($this->settings as $section => $data) {
+				if ($current_section && $current_section != $section) {
 					continue;
 				}
 
 				// Add section to page
-				add_settings_section( $section, $data['title'], array( $this, 'settings_section' ), $this->parent->_token . '_settings' );
+				add_settings_section($section, $data['title'], array($this, 'settings_section'), $this->parent->_token . '_settings');
 
-				foreach ( $data['fields'] as $field ) {
+				foreach ($data['fields'] as $field) {
 
 					// Validation callback for field
 					$validation = '';
-					if ( isset( $field['callback'] ) ) {
+					if (isset($field['callback'])) {
 						$validation = $field['callback'];
 					}
 
 					// Register field
 					$option_name = $this->base . $field['id'];
-					register_setting( $this->parent->_token . '_settings', $option_name, $validation );
+					register_setting($this->parent->_token . '_settings', $option_name, $validation);
 
 					// Add field to page
 					add_settings_field(
 						$field['id'],
 						$field['label'],
-						array( $this->parent->admin, 'display_field' ),
+						array($this->parent->admin, 'display_field'),
 						$this->parent->_token . '_settings',
 						$section,
 						array(
@@ -264,15 +272,16 @@ class WpWithPersona_Settings {
 					);
 				}
 
-				if ( ! $current_section ) {
+				if (! $current_section) {
 					break;
 				}
 			}
 		}
 	}
 
-	public function settings_section( $section ) {
-		$html = '<p> ' . $this->settings[ $section['id'] ]['description'] . '</p>' . "\n";
+	public function settings_section($section)
+	{
+		$html = '<p> ' . $this->settings[$section['id']]['description'] . '</p>' . "\n";
 		echo $html;
 	}
 
@@ -281,45 +290,46 @@ class WpWithPersona_Settings {
 	 *
 	 * @return void
 	 */
-	public function settings_page() {
+	public function settings_page()
+	{
 
 		// Build page HTML
 		$html  = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
 		$html .= '<div class="wpp_header">';
-		$html .= '<h2>' . __( 'WP With Persona Settings', 'wp-withpersona' ) . '</h2>' . "\n";
-		$html .= '<div class="wpp-help-icon"><span class="dashicons dashicons-editor-help"></span></div>';
+		$html .= '<h2>' . __('WP With Persona Settings', 'wp-withpersona') . '</h2>' . "\n";
+		// $html .= '<div class="wpp-help-icon"><span class="dashicons dashicons-editor-help"></span></div>';
 		$html .= '</div>';
 
 		$tab = '';
-		if ( isset( $_GET['tab'] ) && $_GET['tab'] ) {
+		if (isset($_GET['tab']) && $_GET['tab']) {
 			$tab .= $_GET['tab'];
 		}
 
 		// Show page tabs
-		if ( is_array( $this->settings ) && 1 < count( $this->settings ) ) {
+		if (is_array($this->settings) && 1 < count($this->settings)) {
 			$html .= '<h2 class="nav-tab-wrapper">' . "\n";
 
 			$c = 0;
-			foreach ( $this->settings as $section => $data ) {
+			foreach ($this->settings as $section => $data) {
 
 				// Set tab class
 				$class = 'nav-tab';
-				if ( ! isset( $_GET['tab'] ) ) {
-					if ( 0 == $c ) {
+				if (! isset($_GET['tab'])) {
+					if (0 == $c) {
 						$class .= ' nav-tab-active';
 					}
-				} elseif ( isset( $_GET['tab'] ) && $section == $_GET['tab'] ) {
+				} elseif (isset($_GET['tab']) && $section == $_GET['tab']) {
 					$class .= ' nav-tab-active';
 				}
 
 				// Set tab link
-				$tab_link = add_query_arg( array( 'tab' => $section ) );
-				if ( isset( $_GET['settings-updated'] ) ) {
-					$tab_link = remove_query_arg( 'settings-updated', $tab_link );
+				$tab_link = add_query_arg(array('tab' => $section));
+				if (isset($_GET['settings-updated'])) {
+					$tab_link = remove_query_arg('settings-updated', $tab_link);
 				}
 
 				// Output tab
-				$html .= '<a href="' . $tab_link . '" class="' . esc_attr( $class ) . '">' . esc_html( $data['title'] ) . '</a>' . "\n";
+				$html .= '<a href="' . $tab_link . '" class="' . esc_attr($class) . '">' . esc_html($data['title']) . '</a>' . "\n";
 
 				++$c;
 			}
@@ -331,14 +341,15 @@ class WpWithPersona_Settings {
 
 		// Get settings fields
 		ob_start();
-		settings_fields( $this->parent->_token . '_settings' );
-		do_settings_sections( $this->parent->_token . '_settings' );
+		settings_fields($this->parent->_token . '_settings');
+		do_settings_sections($this->parent->_token . '_settings');
 		// do_settings_sections( 'wp_with_persona_settings' );
 		$html .= ob_get_clean();
 
 		$html .= '<p class="submit">' . "\n";
-		$html .= '<input type="hidden" name="tab" value="' . esc_attr( $tab ) . '" />' . "\n";
-		$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr( __( 'Save Settings', 'wp-withpersona' ) ) . '" />' . "\n";
+		$html .= '<input type="hidden" name="tab" value="' . esc_attr($tab) . '" />' . "\n";
+		$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr(__('Save Settings', 'wp-withpersona')) . '" />' . "\n";
+		$html .= '<a href="admin.php?page=wp-withpersona-settings-home" class="button button-secondary">Go to persona dashboard</a>';
 		$html .= '</p>' . "\n";
 		$html .= '</form>' . "\n";
 		$html .= '</div>' . "\n";
@@ -356,9 +367,10 @@ class WpWithPersona_Settings {
 	 * @see WpWithPersona()
 	 * @return Main WpWithPersona_Settings instance
 	 */
-	public static function instance( $parent ) {
-		if ( is_null( self::$_instance ) ) {
-			self::$_instance = new self( $parent );
+	public static function instance($parent)
+	{
+		if (is_null(self::$_instance)) {
+			self::$_instance = new self($parent);
 		}
 		return self::$_instance;
 	} // End instance()
@@ -368,8 +380,9 @@ class WpWithPersona_Settings {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __clone() {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'wp-withpersona' ), $this->parent->_version );
+	public function __clone()
+	{
+		_doing_it_wrong(__FUNCTION__, __('Cheatin&#8217; huh?', 'wp-withpersona'), $this->parent->_version);
 	} // End __clone()
 
 	/**
@@ -377,7 +390,8 @@ class WpWithPersona_Settings {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __wakeup() {
-		_doing_it_wrong( __FUNCTION__, __( 'Cheatin&#8217; huh?', 'wp-withpersona' ), $this->parent->_version );
+	public function __wakeup()
+	{
+		_doing_it_wrong(__FUNCTION__, __('Cheatin&#8217; huh?', 'wp-withpersona'), $this->parent->_version);
 	} // End __wakeup()
 }

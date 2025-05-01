@@ -1,6 +1,6 @@
 <div class="wrap">
   <h1 class="wp-heading-inline"><?php echo esc_html__('Persona Dashboard', 'wp-withpersona'); ?></h1>
-  <a href="/wp-admin/admin.php?page=wp-withpersona-settings" class="page-title-action">Settings</a>
+  <a href="admin.php?page=wp-withpersona-settings" class="page-title-action">Settings</a>
   <hr class="wp-header-end">
 
   <!-- WordPress will inject notices here -->
