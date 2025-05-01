@@ -101,8 +101,8 @@
   }
 
   .wpp-users-container {
-    max-width: 1200px;
-    margin: 0 auto;
+    /* max-width: 1200px; */
+    /* margin: 0 auto; */
   }
 
   .wpp-user-card {

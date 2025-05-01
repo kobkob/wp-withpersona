@@ -125,15 +125,15 @@ class WpWithPersona_Verification
 
 		// If we checked recently (within last hour), return cached status
 		if ($verification_status && $last_checked && (time() - $last_checked) < 3600) {
-			return $verification_status === 'completed';
+			return $verification_status === 'approved';
 		}
 
 		$last_checked_date = date('Y-m-d\TH:i:s.v\Z', $last_checked);
 
 		// Make API call to Persona to verify user
-
+		// &filter[created-at-start]=$last_checked_date
 		$response = wp_remote_get(
-			"https://withpersona.com/api/v1/inquiries?filter[reference-id]=$user_id&filter[inquiry-template-id]=$template_id&filter[created-at-start]=$last_checked_date",
+			"https://withpersona.com/api/v1/inquiries?filter[reference-id]=$user_id&filter[inquiry-template-id]=$template_id",
 			array(
 				'headers' => array(
 					'Authorization' => 'Bearer ' . $api_key,
@@ -146,19 +146,17 @@ class WpWithPersona_Verification
 			return false;
 		}
 
-		error_log('response: ' . print_r($response, true));
-
 		$body        = json_decode(wp_remote_retrieve_body($response), true);
-		$is_verified = isset($body['status']) && $body['status'] === 'verified';
+		$data = $body['data'];
+		$latest_inquiry = $data[0];
+		$attributes = $latest_inquiry['attributes'];
+		$status = $attributes['status'];
+		$is_verified = $status === 'approved' || $status === 'completed';
 
 		// Update user meta with verification status
-		update_user_meta($user_id, 'persona_verification_status', $is_verified ? 'verified' : 'unverified');
+		update_user_meta($user_id, 'persona_verification_status', $status);
 		update_user_meta($user_id, 'persona_verification_last_checked', time());
-
-		// Update verification timestamp whenever user becomes verified
-		if ($is_verified) {
-			update_user_meta($user_id, 'persona_verification_timestamp', time());
-		}
+		update_user_meta($user_id, 'persona_verification_completed_at', $attributes['completed-at']);
 
 		return $is_verified;
 	}
