@@ -1,6 +1,6 @@
 {
   "name": "wp-withpersona",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Plugin to integrate a WordPress website with WP With Persona.",
   "main": "index.js",
   "directories": {

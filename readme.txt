@@ -5,7 +5,7 @@ Tags: comments, spam
 Requires at least: 6.3
 Tested up to: 6.5.2
 Requires PHP: 7.4
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -57,6 +57,9 @@ e.g.
 
 = 1.2.1 =
 * Consolidate release candidate
+
+= 1.2.2 =
+* Add persona verification to admin dashboard and to other users
 
 == Upgrade Notice ==
 

@@ -8,7 +8,7 @@
  * Author URI:      https://kobkob.org/
  * Text Domain:     wp-withpersona
  * Domain Path:     /languages
- * Version:         1.2.1
+ * Version:         1.2.2
  *
  * @package         wp-withpersona
  */
@@ -35,12 +35,12 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-wp-withpersona-ajax.php
 /**
  * Returns the main instance of WpWithPersona to prevent the need to use globals.
  *
- * @since  1.0.0
+ * @since  1.2.2
  * @return object WP-WITHPERSONA
  */
 function wp_withpersona()
 {
-	$instance = WpWithPersona::instance(__FILE__, '1.0.0');
+	$instance = WpWithPersona::instance(__FILE__, '1.2.2');
 
 	if (is_null($instance->settings)) {
 		$instance->settings = WpWithPersona_Settings::instance($instance);
@@ -69,7 +69,7 @@ wp_withpersona();
 register_activation_hook(__FILE__, 'activate_wp_withpersona');
 
 /*
-! \mainpage WP - With Persona 1.2.1
+! \mainpage WP - With Persona 1.2.2
  *
  * - by Monsenhor
  *
