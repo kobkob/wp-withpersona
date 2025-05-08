@@ -143,7 +143,8 @@ class WpWithPersona_Settings
 	{
 		// $this->default_tab = 'account';
 		$settings['account'] = array(
-			'title'       => __('Account', 'wp-withpersona'),
+			// 'title'       => __('Account', 'wp-withpersona'),
+			'title'       => 'WP With Persona Settings',
 			'description' => __('Your account and keys at With Persona.', 'wp-withpersona'),
 			'fields'      => array(
 				array(
@@ -171,51 +172,42 @@ class WpWithPersona_Settings
 					'placeholder' => __('Your Persona Environment ID', 'wp-withpersona'),
 				),
 				array(
-					'id'          => 'api_password',
-					'label'       => __('API Password', 'wp-withpersona'),
-					'description' => __('The password for the API.', 'wp-withpersona'),
-					'type'        => 'text',
-					'default'     => '',
-					'placeholder' => __('**************', 'wp-withpersona'),
-				),
-				array(
-					'id'          => 'limit_uers',
+					'id'          => 'limit_users',
 					'label'       => __('Users Limit', 'wp-withpersona'),
 					'description' => __('The maximum users per month.', 'wp-withpersona'),
 					'type'        => 'number',
 					'default'     => 50,
 				),
-
 			),
 		);
-		$settings['pages'] = array(
-			'title'       => __('Pages', 'wp-withpersona'),
-			'description' => __('Pages where WithPersona will load', 'wp-withpersona'),
-			'fields'      => array(
-				array(
-					'id'          => 'add_registration_page',
-					'label'       => __('Registration Page.', 'wp-withpersona'),
-					'description' => __('Use WP With Persona on the default Registration Page.', 'wp-withpersona'),
-					'type'        => 'checkbox',
-					'default'     => '',
-				),
-				array(
-					'id'          => 'add_admin_page',
-					'label'       => __('Administration Page.', 'wp-withpersona'),
-					'description' => __('Use WP With Persona on the WordPress administrative pages.', 'wp-withpersona'),
-					'type'        => 'checkbox',
-					'default'     => '',
-				),
-				array(
-					'id'          => 'add_page_btn',
-					'label'       => __('Add a page', 'wp-withpersona'),
-					'description' => __('Add all pages where Persona tool will load.', 'wp-withpersona'),
-					'type'        => 'text_multi',
-					'default'     => '',
-					'placeholder' => __('https://', 'wp-withpersona'),
-				),
-			),
-		);
+		// $settings['pages'] = array(
+		// 	'title'       => __('Pages', 'wp-withpersona'),
+		// 	'description' => __('Pages where WithPersona will load', 'wp-withpersona'),
+		// 	'fields'      => array(
+		// 		array(
+		// 			'id'          => 'add_registration_page',
+		// 			'label'       => __('Registration Page.', 'wp-withpersona'),
+		// 			'description' => __('Use WP With Persona on the default Registration Page.', 'wp-withpersona'),
+		// 			'type'        => 'checkbox',
+		// 			'default'     => '',
+		// 		),
+		// 		array(
+		// 			'id'          => 'add_admin_page',
+		// 			'label'       => __('Administration Page.', 'wp-withpersona'),
+		// 			'description' => __('Use WP With Persona on the WordPress administrative pages.', 'wp-withpersona'),
+		// 			'type'        => 'checkbox',
+		// 			'default'     => '',
+		// 		),
+		// 		array(
+		// 			'id'          => 'add_page_btn',
+		// 			'label'       => __('Add a page', 'wp-withpersona'),
+		// 			'description' => __('Add all pages where Persona tool will load.', 'wp-withpersona'),
+		// 			'type'        => 'text_multi',
+		// 			'default'     => '',
+		// 			'placeholder' => __('https://', 'wp-withpersona'),
+		// 		),
+		// 	),
+		// );
 		$settings          = apply_filters($this->parent->_token . '_settings_fields', $settings);
 
 		return $settings;
@@ -296,7 +288,7 @@ class WpWithPersona_Settings
 		// Build page HTML
 		$html  = '<div class="wrap" id="' . $this->parent->_token . '_settings">' . "\n";
 		$html .= '<div class="wpp_header">';
-		$html .= '<h2>' . __('WP With Persona Settings', 'wp-withpersona') . '</h2>' . "\n";
+		// $html .= '<h2>' . __('WP With Persona Settings', 'wp-withpersona') . '</h2>' . "\n";
 		// $html .= '<div class="wpp-help-icon"><span class="dashicons dashicons-editor-help"></span></div>';
 		$html .= '</div>';
 
@@ -343,7 +335,7 @@ class WpWithPersona_Settings
 		ob_start();
 		settings_fields($this->parent->_token . '_settings');
 		do_settings_sections($this->parent->_token . '_settings');
-		// do_settings_sections( 'wp_with_persona_settings' );
+
 		$html .= ob_get_clean();
 
 		$html .= '<p class="submit">' . "\n";

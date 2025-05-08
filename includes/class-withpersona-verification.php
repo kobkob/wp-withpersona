@@ -112,10 +112,10 @@ class WpWithPersona_Verification
 	{
 		$api_key        = get_option('wpwithpersona_api_key');
 		$template_id    = get_option('wpwithpersona_api_template_id');
-		// $environment_id = get_option('wpwithpersona_api_environment_id');
 
 		$user = get_user_by('id', $user_id);
 		if (! $user) {
+			// error_log('User not found: ' . $user_id);
 			return false;
 		}
 
@@ -123,13 +123,25 @@ class WpWithPersona_Verification
 		$verification_status = get_user_meta($user_id, 'persona_verification_status', true);
 		$last_checked        = get_user_meta($user_id, 'persona_verification_last_checked', true);
 
+		// error_log('Current verification status: ' . $verification_status);
+		// error_log('Last checked: ' . $last_checked);
+
+		// Check for cache bust parameter
+		$force_check = isset($_GET['update_verification']) && $_GET['update_verification'] === '1';
+		if ($force_check) {
+			// error_log('Cache bust requested - forcing fresh verification check');
+			// Clear the cache by setting last_checked to 0
+			update_user_meta($user_id, 'persona_verification_last_checked', 0);
+			$last_checked = 0;
+		}
+
 		// If we checked recently (within last hour), return cached status
 		if ($verification_status && $last_checked && (time() - $last_checked) < 3600) {
-			return $verification_status === 'approved';
+			// error_log('Using cached verification status for user ' . $user_id . ': ' . $verification_status);
+			return $verification_status === 'approved' || $verification_status === 'completed' || $verification_status === 'verified';
 		}
 
 		// Make API call to Persona to verify user
-		// &filter[created-at-start]=$last_checked_date
 		$response = wp_remote_get(
 			"https://withpersona.com/api/v1/inquiries?filter[reference-id]=$user_id&filter[inquiry-template-id]=$template_id",
 			array(
@@ -141,21 +153,48 @@ class WpWithPersona_Verification
 		);
 
 		if (is_wp_error($response)) {
+			error_log('Persona API error: ' . $response->get_error_message());
 			return false;
 		}
 
-		$body        = json_decode(wp_remote_retrieve_body($response), true);
+		$body = json_decode(wp_remote_retrieve_body($response), true);
+
+		// Check if we have valid data
+		if (empty($body['data']) || !is_array($body['data'])) {
+			// error_log('No verification data found for user ' . $user_id . ' - setting as unverified');
+			update_user_meta($user_id, 'persona_verification_status', 'unverified');
+			update_user_meta($user_id, 'persona_verification_last_checked', time());
+			return false;
+		}
+
 		$data = $body['data'];
+		if (empty($data[0])) {
+			// error_log('No verification inquiries found for user ' . $user_id . ' - setting as unverified');
+			update_user_meta($user_id, 'persona_verification_status', 'unverified');
+			update_user_meta($user_id, 'persona_verification_last_checked', time());
+			return false;
+		}
+
 		$latest_inquiry = $data[0];
+		if (empty($latest_inquiry['attributes'])) {
+			// error_log('Invalid inquiry data structure for user ' . $user_id . ' - setting as unverified');
+			update_user_meta($user_id, 'persona_verification_status', 'unverified');
+			update_user_meta($user_id, 'persona_verification_last_checked', time());
+			return false;
+		}
+
 		$attributes = $latest_inquiry['attributes'];
-		$status = $attributes['status'];
-		$is_verified = $status === 'approved' || $status === 'completed';
+		$status = isset($attributes['status']) ? $attributes['status'] : 'unknown';
+		$is_verified = $status === 'approved' || $status === 'completed' || $status === 'verified';
 
 		// Update user meta with verification status
 		update_user_meta($user_id, 'persona_verification_status', $status);
 		update_user_meta($user_id, 'persona_verification_last_checked', time());
-		update_user_meta($user_id, 'persona_verification_completed_at', $attributes['completed-at']);
+		if (isset($attributes['completed-at'])) {
+			update_user_meta($user_id, 'persona_verification_completed_at', $attributes['completed-at']);
+		}
 
+		// error_log('Updated verification status for user ' . $user_id . ': ' . $status . ' (verified: ' . ($is_verified ? 'yes' : 'no') . ')');
 		return $is_verified;
 	}
 
@@ -185,30 +224,72 @@ class WpWithPersona_Verification
 	}
 
 	/**
+	 * Redirect unverified users to verification page
+	 */
+	private function redirect_unverified_user()
+	{
+		if (!is_user_logged_in()) {
+			// error_log('Redirect failed: User not logged in');
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		$verification_url = $this->get_verification_page_url();
+
+		$is_verified = $this->is_user_verified($user_id);
+		// error_log('is_verified: ' . $is_verified);
+
+		// If user is verified and trying to access verification page, redirect them
+		$current_url = $_SERVER['REQUEST_URI'];
+		$verification_page_id = get_option('wpwithpersona_verification_page_id');
+		$verification_page_url = get_permalink($verification_page_id);
+		$verification_path = parse_url($verification_page_url, PHP_URL_PATH);
+		$verification_path_with_cache_bust = $verification_path . '?update_verification=1';
+
+		if ($is_verified && ($current_url === $verification_path || $current_url === $verification_path_with_cache_bust)) {
+			wp_safe_redirect(home_url('/wp-admin/'));
+			exit;
+		}
+
+		// Don't redirect if user is verified
+		if ($is_verified) {
+			// error_log('Redirect failed: User is already verified');
+			return;
+		}
+
+		// error_log('Attempting redirect to verification page: ' . $verification_url);
+		// error_log('Current user ID: ' . $user_id);
+		// error_log('Verification status: ' . get_user_meta($user_id, 'persona_verification_status', true));
+
+		// Redirect to verification page
+		wp_safe_redirect($verification_url);
+		exit;
+	}
+
+	/**
 	 * Check verification on page load for logged-in users
 	 */
 	public function check_verification_on_page_load()
 	{
+
+		// Don't check on the verification page itself
+		$current_url = $_SERVER['REQUEST_URI'];
+		$verification_page_id = get_option('wpwithpersona_verification_page_id');
+		$verification_page_url = get_permalink($verification_page_id);
+		$verification_path = parse_url($verification_page_url, PHP_URL_PATH);
+
+		if ($current_url === $verification_path) {
+			return;
+		}
+
 		if (is_user_logged_in()) {
 			$user_id = get_current_user_id();
 			if (!$this->check_required_settings()) {
 				return;
 			}
-			if (! $this->is_user_verified($user_id)) {
-				// Add notice for unverified users
-				add_action(
-					'admin_notices',
-					function () {
-						$verification_url = $this->get_verification_page_url();
-						echo '<div class="notice notice-warning"><p>';
-						esc_html_e('Your account is not verified with Persona. ', 'wp-withpersona');
-						if ($verification_url) {
-							echo '<a href="' . esc_url($verification_url) . '">' . esc_html__('Complete verification now', 'wp-withpersona') . '</a>';
-						}
-						echo '</p></div>';
-					}
-				);
-			}
+
+			// Always check verification status and redirect if needed
+			$this->redirect_unverified_user();
 		}
 	}
 
@@ -232,9 +313,14 @@ class WpWithPersona_Verification
 	public function get_verification_page_url()
 	{
 		$page_id = get_option('wpwithpersona_verification_page_id');
+		// error_log('Verification page ID: ' . $page_id);
+
 		if ($page_id) {
-			return get_permalink($page_id);
+			$url = get_permalink($page_id);
+			// error_log('Generated verification URL: ' . $url);
+			return $url;
 		}
+		error_log('No verification page ID found');
 		return '';
 	}
 
@@ -307,7 +393,7 @@ class WpWithPersona_Verification
 				</td>
 			</tr>
 		</table>
-		<?php
+	<?php
 	}
 
 	/**
@@ -333,6 +419,22 @@ class WpWithPersona_Verification
 			$reference_id,
 			$verification_status
 		);
+
+		// Add JavaScript to handle verification completion
+	?>
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				// Listen for Persona completion event
+				jQuery(document).on('personaVerification', function(event, status) {
+					console.log('personaVerification event triggered!');
+					console.log('Status:', status);
+					// Redirect to the same page with cache bust parameter
+					window.location.href = window.location.pathname + '?update_verification=1';
+				});
+			});
+		</script>
+		<?php
+
 		return ob_get_clean();
 	}
 

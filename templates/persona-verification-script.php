@@ -70,11 +70,14 @@ if (! defined('ABSPATH')) {
 								nonce: personaConfig.nonce
 							},
 							success: function(response) {
-								console.log("Status saved:", response);
+								// console.log("Status saved:", response);
 							}
 						});
 
 						window.WP_WITH_PERSONA_STATUS = status;
+
+						// Trigger custom event
+						jQuery(document).trigger('personaVerification', [status]);
 					},
 					onError: function(error) {
 						console.error("Error:", error);
