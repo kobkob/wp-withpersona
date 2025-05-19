@@ -31,11 +31,11 @@ class WP_WithPersona_User_Limits
    */
   public function check_daily_registration_limit($output, $save_id, $values, $user_id)
   {
-    error_log('WP WithPersona: Registration form submission started');
-    error_log('WP WithPersona: Form data: ' . print_r($_POST, true));
-    error_log('WP WithPersona: User ID: ' . $user_id);
-    error_log('WP WithPersona: Save ID: ' . $save_id);
-    error_log('WP WithPersona: Values: ' . print_r($values, true));
+    //error_log('WP WithPersona: Registration form submission started');
+    //error_log('WP WithPersona: Form data: ' . print_r($_POST, true));
+    //error_log('WP WithPersona: User ID: ' . $user_id);
+    //error_log('WP WithPersona: Save ID: ' . $save_id);
+    //error_log('WP WithPersona: Values: ' . print_r($values, true));
 
     // Get today's registrations count
     $today = date('Y-m-d');
@@ -51,7 +51,7 @@ class WP_WithPersona_User_Limits
     );
 
     $daily_registrations = count_users_by_date($args);
-    error_log('WP WithPersona: Daily registrations count: ' . $daily_registrations);
+    //error_log('WP WithPersona: Daily registrations count: ' . $daily_registrations);
 
     // Get the daily limit from settings
     $daily_limit = get_option('wp_withpersona_limit_users', 50);
