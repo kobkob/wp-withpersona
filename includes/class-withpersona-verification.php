@@ -115,16 +115,12 @@ class WpWithPersona_Verification
 
 		$user = get_user_by('id', $user_id);
 		if (! $user) {
-			// error_log('User not found: ' . $user_id);
 			return false;
 		}
 
 		// Get verification status from user meta
 		$verification_status = get_user_meta($user_id, 'persona_verification_status', true);
 		$last_checked        = get_user_meta($user_id, 'persona_verification_last_checked', true);
-
-		// error_log('Current verification status: ' . $verification_status);
-		// error_log('Last checked: ' . $last_checked);
 
 		// Check for cache bust parameter
 		$force_check = isset($_GET['update_verification']) && $_GET['update_verification'] === '1';
@@ -137,7 +133,6 @@ class WpWithPersona_Verification
 
 		// If we checked recently (within last hour), return cached status
 		if ($verification_status && $last_checked && (time() - $last_checked) < 3600) {
-			// error_log('Using cached verification status for user ' . $user_id . ': ' . $verification_status);
 			return $verification_status === 'approved' || $verification_status === 'completed' || $verification_status === 'verified';
 		}
 
@@ -153,7 +148,37 @@ class WpWithPersona_Verification
 		);
 
 		if (is_wp_error($response)) {
-			error_log('Persona API error: ' . $response->get_error_message());
+			error_log('Persona API error: ' . print_r($response, true));
+			// we need to inform the admin that the API is not working
+			add_action('admin_notices', function () {
+				?>
+				<div class="notice notice-error is-dismissible">
+					<p style="margin-bottom: 10px;">
+						<strong><?php esc_html_e('Persona API Connection Error', 'wp-withpersona'); ?></strong>
+					</p>
+					<p style="margin-bottom: 15px;">
+						<?php esc_html_e('Unable to connect to the Persona API. This could be due to:', 'wp-withpersona'); ?>
+					</p>
+					<ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 15px;">
+						<li><?php esc_html_e('Invalid API credentials', 'wp-withpersona'); ?></li>
+						<li><?php esc_html_e('API service disruption', 'wp-withpersona'); ?></li>
+						<li><?php esc_html_e('Network connectivity issues', 'wp-withpersona'); ?></li>
+					</ul>
+					<p style="margin-bottom: 15px;">
+						<?php esc_html_e('Please check your settings or verify the API status:', 'wp-withpersona'); ?>
+					</p>
+					<p>
+						<a href="<?php echo esc_url(admin_url('admin.php?page=wp-withpersona-settings')); ?>" class="button button-primary" style="margin-right: 10px;">
+							<?php esc_html_e('Check Settings', 'wp-withpersona'); ?>
+						</a>
+						<a href="https://status.withpersona.com/" target="_blank" class="button" style="margin-right: 10px;">
+							<?php esc_html_e('View API Status', 'wp-withpersona'); ?>
+							<span class="dashicons dashicons-external" style="vertical-align: middle; margin-left: 5px;"></span>
+						</a>
+					</p>
+				</div>
+				<?php
+			});
 			return false;
 		}
 
@@ -161,7 +186,6 @@ class WpWithPersona_Verification
 
 		// Check if we have valid data
 		if (empty($body['data']) || !is_array($body['data'])) {
-			// error_log('No verification data found for user ' . $user_id . ' - setting as unverified');
 			update_user_meta($user_id, 'persona_verification_status', 'unverified');
 			update_user_meta($user_id, 'persona_verification_last_checked', time());
 			return false;
@@ -169,7 +193,6 @@ class WpWithPersona_Verification
 
 		$data = $body['data'];
 		if (empty($data[0])) {
-			// error_log('No verification inquiries found for user ' . $user_id . ' - setting as unverified');
 			update_user_meta($user_id, 'persona_verification_status', 'unverified');
 			update_user_meta($user_id, 'persona_verification_last_checked', time());
 			return false;
@@ -177,7 +200,6 @@ class WpWithPersona_Verification
 
 		$latest_inquiry = $data[0];
 		if (empty($latest_inquiry['attributes'])) {
-			// error_log('Invalid inquiry data structure for user ' . $user_id . ' - setting as unverified');
 			update_user_meta($user_id, 'persona_verification_status', 'unverified');
 			update_user_meta($user_id, 'persona_verification_last_checked', time());
 			return false;
@@ -193,8 +215,6 @@ class WpWithPersona_Verification
 		if (isset($attributes['completed-at'])) {
 			update_user_meta($user_id, 'persona_verification_completed_at', $attributes['completed-at']);
 		}
-
-		// error_log('Updated verification status for user ' . $user_id . ': ' . $status . ' (verified: ' . ($is_verified ? 'yes' : 'no') . ')');
 		return $is_verified;
 	}
 
@@ -229,40 +249,75 @@ class WpWithPersona_Verification
 	private function redirect_unverified_user()
 	{
 		if (!is_user_logged_in()) {
-			// error_log('Redirect failed: User not logged in');
 			return;
 		}
 
 		$user_id = get_current_user_id();
-		$verification_url = $this->get_verification_page_url();
-
-		$is_verified = $this->is_user_verified($user_id);
-		// error_log('is_verified: ' . $is_verified);
-
-		// If user is verified and trying to access verification page, redirect them
-		$current_url = $_SERVER['REQUEST_URI'];
 		$verification_page_id = get_option('wpwithpersona_verification_page_id');
 		$verification_page_url = get_permalink($verification_page_id);
 		$verification_path = parse_url($verification_page_url, PHP_URL_PATH);
 		$verification_path_with_cache_bust = $verification_path . '?update_verification=1';
+		$current_url = $_SERVER['REQUEST_URI'];
 
-		if ($is_verified && ($current_url === $verification_path || $current_url === $verification_path_with_cache_bust)) {
-			wp_safe_redirect(home_url('/wp-admin/'));
-			exit;
-		}
+		// Debug logging
+		error_log('Verification check for user ' . $user_id);
+		error_log('Current URL: ' . $current_url);
+		error_log('Verification path: ' . $verification_path);
+		error_log('Verification path with cache bust: ' . $verification_path_with_cache_bust);
 
-		// Don't redirect if user is verified
-		if ($is_verified) {
-			// error_log('Redirect failed: User is already verified');
+		// Check if we're already on the verification page
+		$is_on_verification_page = $current_url === $verification_path || $current_url === $verification_path_with_cache_bust;
+		if ($is_on_verification_page) {
+			error_log('User is already on verification page - no redirect needed');
 			return;
 		}
 
-		// error_log('Attempting redirect to verification page: ' . $verification_url);
-		// error_log('Current user ID: ' . $user_id);
-		// error_log('Verification status: ' . get_user_meta($user_id, 'persona_verification_status', true));
+		// Get verification status
+		$is_verified = (bool) $this->is_user_verified($user_id);
+		error_log('User verification status: ' . ($is_verified ? 'verified' : 'not verified'));
 
-		// Redirect to verification page
-		wp_safe_redirect($verification_url);
+		// Handle admin users
+		if (current_user_can('administrator')) {
+			if (!$is_verified) {
+				// Display warning for unverified admin
+				add_action('admin_notices', function() use ($verification_page_url) {
+					?>
+					<div class="notice notice-warning is-dismissible">
+						<p style="margin-bottom: 10px;">
+							<strong><?php esc_html_e('Account Verification Required', 'wp-withpersona'); ?></strong>
+						</p>
+						<p style="margin-bottom: 15px;">
+							<?php esc_html_e('Your account requires identity verification to access certain features. This helps us maintain a secure environment for all users.', 'wp-withpersona'); ?>
+						</p>
+						<ul style="list-style-type: disc; margin-left: 20px; margin-bottom: 15px;">
+							<li><?php esc_html_e('Quick and secure verification process', 'wp-withpersona'); ?></li>
+							<li><?php esc_html_e('Takes only a few minutes to complete', 'wp-withpersona'); ?></li>
+							<li><?php esc_html_e('Required for full account access', 'wp-withpersona'); ?></li>
+						</ul>
+						<p>
+							<a href="<?php echo esc_url($verification_page_url); ?>" class="button button-primary" style="margin-right: 10px;">
+								<?php esc_html_e('Complete Verification Now', 'wp-withpersona'); ?>
+								<span class="dashicons dashicons-arrow-right-alt" style="vertical-align: middle; margin-left: 5px;"></span>
+							</a>
+							<span class="description" style="vertical-align: middle;">
+								<?php esc_html_e('Estimated time: 5 minutes', 'wp-withpersona'); ?>
+							</span>
+						</p>
+					</div>
+					<?php
+				});
+			}
+			return;
+		}
+
+		// Handle regular users
+		if ($is_verified) {
+			return;
+		}
+
+		// Redirect unverified users to verification page
+		error_log('Redirecting unverified user to verification page');
+		wp_safe_redirect($verification_page_url);
 		exit;
 	}
 
