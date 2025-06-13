@@ -259,22 +259,14 @@ class WpWithPersona_Verification
 		$verification_path_with_cache_bust = $verification_path . '?update_verification=1';
 		$current_url = $_SERVER['REQUEST_URI'];
 
-		// Debug logging
-		error_log('Verification check for user ' . $user_id);
-		error_log('Current URL: ' . $current_url);
-		error_log('Verification path: ' . $verification_path);
-		error_log('Verification path with cache bust: ' . $verification_path_with_cache_bust);
-
 		// Check if we're already on the verification page
 		$is_on_verification_page = $current_url === $verification_path || $current_url === $verification_path_with_cache_bust;
 		if ($is_on_verification_page) {
-			error_log('User is already on verification page - no redirect needed');
 			return;
 		}
 
 		// Get verification status
 		$is_verified = (bool) $this->is_user_verified($user_id);
-		error_log('User verification status: ' . ($is_verified ? 'verified' : 'not verified'));
 
 		// Handle admin users
 		if (current_user_can('administrator')) {
@@ -316,7 +308,6 @@ class WpWithPersona_Verification
 		}
 
 		// Redirect unverified users to verification page
-		error_log('Redirecting unverified user to verification page');
 		wp_safe_redirect($verification_page_url);
 		exit;
 	}
