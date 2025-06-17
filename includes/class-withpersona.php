@@ -319,7 +319,7 @@ class WpWithPersona {
 	 * @since    1.0.1
 	 */
 	public function wp_withpersona_dashboard() {
-		add_menu_page( __( 'Persona Dashboard', 'wp-withpersona' ), __( 'Persona Dashboard', 'wp-withpersona' ), 'manage_options', 'wp-withpersona-settings-home', array( $this, 'wp_withpersona_dashboard_page' ), 'dashicons-id', 0 );
+		add_menu_page( __( 'Persona Dashboard', 'wp-withpersona' ), __( 'Persona Dashboard', 'wp-withpersona' ), 'manage_options', 'wp-withpersona-settings-home', array( $this, 'wp_withpersona_dashboard_page' ), 'dashicons-id' );
 	}
 
 	/**
