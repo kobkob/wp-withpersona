@@ -1,25 +1,38 @@
-?>
-
-<small>Powered by <b><a target="__blank" href="https://withpersona.com/">With Persona</b></a></small><br>&nbsp;<br>
-<script src="https://cdn.withpersona.com/dist/persona-v4.8.0.js"></script>
-
-<script>
-
-  const client = new Persona.Client({
-
-    templateId: 'itmpl_1k5CoM5gd1oo2cbxn1zdZnWZ',
-
-    environmentId: 'env_9tVLdprhMFNx9fHSPZe7HUPM',
-
-    onReady: () => client.open(),
-
-    onComplete: ({ inquiryId, status, fields }) => {
-
-      console.log(`Completed inquiry ${inquiryId} with status ${status}`);
-
-    }
-
-  });
-
-</script>
 <?php
+/**
+ * Persona integration code
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+require_once plugin_dir_path( __FILE__ ) . 'traits/trait-persona-verification-common.php';
+
+class Persona_Code {
+	use Persona_Verification_Common;
+
+	public function render() {
+		$reference_id        = $this->get_reference_id();
+		$verification_status = $this->get_verification_status();
+		$settings            = $this->get_persona_settings();
+
+		if ( ! $this->are_settings_configured() ) {
+			$this->render_configuration_error();
+			return;
+		}
+
+		$this->render_persona_container( $verification_status );
+		$this->render_persona_styles();
+		$this->render_persona_scripts(
+			$settings['template_id'],
+			$settings['environment_id'],
+			$reference_id,
+			$verification_status
+		);
+	}
+}
+
+// Initialize and render
+$persona_code = new Persona_Code();
+$persona_code->render();
