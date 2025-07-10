@@ -8,7 +8,7 @@
  * Author URI:      https://kobkob.org/
  * Text Domain:     wp-withpersona
  * Domain Path:     /languages
- * Version:         1.2.2
+ * Version: 1.2.3
  *
  * @package         wp-withpersona
  */
