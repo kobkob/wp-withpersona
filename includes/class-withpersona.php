@@ -141,7 +141,7 @@ class WpWithPersona {
 
 		// $this->script_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 		$this->script_suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '';
-		$this->admin_url     = 'persona_admin_page';
+		$this->admin_url     = 'wp-withpersona-dashboard';
 		$this->test_url      = 'persona_test_page';
 
 		register_activation_hook( $this->file, array( $this, 'install' ) );
@@ -319,7 +319,7 @@ class WpWithPersona {
 	 * @since    1.0.1
 	 */
 	public function wp_withpersona_dashboard() {
-		add_menu_page( __( 'Persona Dashboard', 'wp-withpersona' ), __( 'Persona Dashboard', 'wp-withpersona' ), 'manage_options', 'wp-withpersona-settings-home', array( $this, 'wp_withpersona_dashboard_page' ), 'dashicons-id', 0 );
+		add_menu_page( __( 'Persona Dashboard', 'wp-withpersona' ), __( 'Persona Dashboard', 'wp-withpersona' ), 'manage_options', 'wp-withpersona-dashboard', array( $this, 'wp_withpersona_dashboard_page' ), 'dashicons-id', 30 );
 	}
 
 	/**

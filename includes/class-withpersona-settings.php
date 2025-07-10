@@ -87,7 +87,7 @@ class WpWithPersona_Settings {
 	 */
 	public function add_menu_item() {
 		$page = add_submenu_page(
-			'wp_withpersona-dashboard',
+			'wp-withpersona-dashboard',
 			__( 'Settings', 'wp-withpersona' ),
 			__( 'Settings', 'wp-withpersona' ),
 			'manage_options',
@@ -332,7 +332,7 @@ class WpWithPersona_Settings {
 		$html .= '<p class="submit">' . "\n";
 		$html .= '<input type="hidden" name="tab" value="' . esc_attr( $tab ) . '" />' . "\n";
 		$html .= '<input name="Submit" type="submit" class="button-primary" value="' . esc_attr( __( 'Save Settings', 'wp-withpersona' ) ) . '" />' . "\n";
-		$html .= '<a href="admin.php?page=wp-withpersona-settings-home" class="button button-secondary">Go to persona dashboard</a>';
+		$html .= '<a href="admin.php?page=wp-withpersona-dashboard" class="button button-secondary">Go to persona dashboard</a>';
 		$html .= '</p>' . "\n";
 		$html .= '</form>' . "\n";
 		$html .= '</div>' . "\n";
