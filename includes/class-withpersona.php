@@ -225,14 +225,14 @@ class WpWithPersona {
 	 * @since    1.0.0
 	 */
 	// public function wp_withpersona_user_register( $user_id ) {
-	// 	$persona_code = plugin_dir_path( __DIR__ ) . 'public/user_register.php';
-	// 	if ( file_exists( $persona_code ) ) {
-	// 		require_once $persona_code;
-	// 	} else {
-	// 		echo "<h1>Error, $persona_code not found</h1>";
-	// 		die( 'Error' );
-	// 	}
-	// 	return $user_id;
+	// $persona_code = plugin_dir_path( __DIR__ ) . 'public/user_register.php';
+	// if ( file_exists( $persona_code ) ) {
+	// require_once $persona_code;
+	// } else {
+	// echo "<h1>Error, $persona_code not found</h1>";
+	// die( 'Error' );
+	// }
+	// return $user_id;
 	// }
 
 	/**

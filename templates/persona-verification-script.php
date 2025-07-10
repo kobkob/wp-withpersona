@@ -11,18 +11,18 @@
  * @var string $nonce
  */
 
-if (! defined('ABSPATH')) {
+if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
 <script>
 	const personaConfig = {
-		templateId: <?php echo wp_json_encode($template_id); ?>,
-		environmentId: <?php echo wp_json_encode($environment_id); ?>,
-		referenceId: <?php echo wp_json_encode($reference_id); ?>,
+		templateId: <?php echo wp_json_encode( $template_id ); ?>,
+		environmentId: <?php echo wp_json_encode( $environment_id ); ?>,
+		referenceId: <?php echo wp_json_encode( $reference_id ); ?>,
 		language: "en",
-		verificationStatus: <?php echo wp_json_encode($verification_status); ?>,
-		nonce: <?php echo wp_json_encode($nonce); ?>
+		verificationStatus: <?php echo wp_json_encode( $verification_status ); ?>,
+		nonce: <?php echo wp_json_encode( $nonce ); ?>
 	};
 
 	window.WP_WITH_PERSONA_CONFIG = personaConfig;
