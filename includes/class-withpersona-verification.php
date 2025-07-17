@@ -223,7 +223,6 @@ class WpWithPersona_Verification {
 	 */
 	private function redirect_unverified_user() {
 		if ( ! is_user_logged_in() ) {
-			// error_log('Redirect failed: User not logged in');
 			return;
 		}
 
@@ -231,10 +230,9 @@ class WpWithPersona_Verification {
 		$verification_url = $this->get_verification_page_url();
 
 		$is_verified = $this->is_user_verified( $user_id );
-		// error_log('is_verified: ' . $is_verified);
 
 		// If user is verified and trying to access verification page, redirect them
-		$current_url                       = $_SERVER['REQUEST_URI'];
+		$current_url                       = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
 		$verification_page_id              = get_option( 'wpwithpersona_verification_page_id' );
 		$verification_page_url             = get_permalink( $verification_page_id );
 		$verification_path                 = parse_url( $verification_page_url, PHP_URL_PATH );
@@ -247,13 +245,8 @@ class WpWithPersona_Verification {
 
 		// Don't redirect if user is verified
 		if ( $is_verified ) {
-			// error_log('Redirect failed: User is already verified');
 			return;
 		}
-
-		// error_log('Attempting redirect to verification page: ' . $verification_url);
-		// error_log('Current user ID: ' . $user_id);
-		// error_log('Verification status: ' . get_user_meta($user_id, 'persona_verification_status', true));
 
 		// Redirect to verification page
 		wp_safe_redirect( $verification_url );
@@ -264,9 +257,17 @@ class WpWithPersona_Verification {
 	 * Check verification on page load for logged-in users
 	 */
 	public function check_verification_on_page_load() {
+		// Don't check on logout-related URLs
+		$current_url = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+
+		// Skip verification check on logout, login, and admin-ajax URLs
+		if ( strpos( $current_url, 'wp-login.php?action=logout' ) !== false ||
+			strpos( $current_url, 'wp-login.php' ) !== false ||
+			strpos( $current_url, 'wp-admin/admin-ajax.php' ) !== false ) {
+			return;
+		}
 
 		// Don't check on the verification page itself
-		$current_url           = $_SERVER['REQUEST_URI'];
 		$verification_page_id  = get_option( 'wpwithpersona_verification_page_id' );
 		$verification_page_url = get_permalink( $verification_page_id );
 		$verification_path     = parse_url( $verification_page_url, PHP_URL_PATH );
