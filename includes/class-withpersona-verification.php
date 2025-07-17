@@ -229,6 +229,14 @@ class WpWithPersona_Verification {
 		$user_id          = get_current_user_id();
 		$verification_url = $this->get_verification_page_url();
 
+		// Allow administrators to access wp-admin even if not verified
+		if ( current_user_can( 'manage_options' ) ) {
+			$current_url = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '';
+			if ( strpos( $current_url, '/wp-admin/' ) !== false ) {
+				return;
+			}
+		}
+
 		$is_verified = $this->is_user_verified( $user_id );
 
 		// If user is verified and trying to access verification page, redirect them
