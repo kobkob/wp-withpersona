@@ -68,6 +68,9 @@ class WpWithPersona_Verification {
 
 		// Check if required settings are configured
 		add_action( 'admin_notices', array( $this, 'check_required_settings_notice' ) );
+
+		// Add admin notice for unverified administrators
+		add_action( 'admin_notices', array( $this, 'check_admin_verification_notice' ) );
 	}
 
 	private function check_required_settings() {
@@ -94,6 +97,39 @@ class WpWithPersona_Verification {
 						<?php esc_html_e( 'Configure Settings', 'wp-withpersona' ); ?>
 					</a>
 				</p>
+			</div>
+			<?php
+		}
+	}
+
+	/**
+	 * Check if administrator is verified and show notice if not
+	 */
+	public function check_admin_verification_notice() {
+		if ( ! is_user_logged_in() || ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		if ( ! $this->check_required_settings() ) {
+			return;
+		}
+
+		$user_id = get_current_user_id();
+		if ( ! $this->is_user_verified( $user_id ) ) {
+			$verification_url = $this->get_verification_page_url();
+			?>
+			<div class="notice notice-warning">
+				<p>
+					<strong><?php esc_html_e( 'Admin Account Verification Required', 'wp-withpersona' ); ?></strong>
+				</p>
+				<p><?php esc_html_e( 'Your administrator account is not currently verified with Persona. While you can still access the admin area, it is recommended to complete verification for security purposes.', 'wp-withpersona' ); ?></p>
+				<?php if ( $verification_url ) : ?>
+					<p>
+						<a href="<?php echo esc_url( $verification_url ); ?>" class="button button-primary">
+							<?php esc_html_e( 'Complete Verification Now', 'wp-withpersona' ); ?>
+						</a>
+					</p>
+				<?php endif; ?>
 			</div>
 			<?php
 		}
