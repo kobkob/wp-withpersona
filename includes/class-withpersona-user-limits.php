@@ -31,7 +31,21 @@ class WP_WithPersona_User_Limits {
 	public function check_daily_registration_limit( $output, $save_id, $values, $user_id ) {
 		error_log( 'WP WithPersona: Registration form submission started' );
 		error_log( 'WP WithPersona: Form data: ' . print_r( $_POST, true ) );
+
+		// Handle WP_Error object for user_id
+		if ( is_wp_error( $user_id ) ) {
+			error_log( 'WP WithPersona: User ID is WP_Error: ' . $user_id->get_error_message() );
+			return; // Exit early if user_id is an error
+		}
+
 		error_log( 'WP WithPersona: User ID: ' . $user_id );
+
+		// Handle WP_Error object for save_id
+		if ( is_wp_error( $save_id ) ) {
+			error_log( 'WP WithPersona: Save ID is WP_Error: ' . $save_id->get_error_message() );
+			return; // Exit early if save_id is an error
+		}
+
 		error_log( 'WP WithPersona: Save ID: ' . $save_id );
 		error_log( 'WP WithPersona: Values: ' . print_r( $values, true ) );
 
@@ -49,6 +63,13 @@ class WP_WithPersona_User_Limits {
 		);
 
 		$daily_registrations = count_users_by_date( $args );
+
+		// Handle potential error from count_users_by_date
+		if ( is_wp_error( $daily_registrations ) ) {
+			error_log( 'WP WithPersona: Error counting daily registrations: ' . $daily_registrations->get_error_message() );
+			return; // Exit early if counting failed
+		}
+
 		error_log( 'WP WithPersona: Daily registrations count: ' . $daily_registrations );
 
 		// Get the daily limit from settings
@@ -56,7 +77,10 @@ class WP_WithPersona_User_Limits {
 
 		// Check if daily limit is reached
 		if ( $daily_registrations >= $daily_limit ) {
-			wp_delete_user( $save_id ); // Delete the just-created user
+			// Only delete user if save_id is a valid integer
+			if ( is_numeric( $save_id ) && $save_id > 0 ) {
+				wp_delete_user( $save_id ); // Delete the just-created user
+			}
 			echo json_encode(
 				array(
 					'success' => false,
