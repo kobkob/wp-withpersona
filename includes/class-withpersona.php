@@ -145,15 +145,6 @@ class WpWithPersona {
 		$this->test_url      = 'persona_test_page';
 
 		register_activation_hook( $this->file, array( $this, 'install' ) );
-		// Load frontend JS & CSS.
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles' ), 10 );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ), 10 );
-
-		// Persona workflow
-		add_action( 'register_form', array( $this, 'wp_withpersona_new_user' ), 0, 1 );
-		add_action( 'register_post', array( $this, 'wp_withpersona_register_user_post' ), 10, 1 );
-		// add_action( 'user_register', array( $this, 'wp_withpersona_user_register' ), 10, 1 );
-		add_action( 'register_new_user', array( $this, 'wp_withpersona_new_user_register' ), 10, 1 );
 
 		// Shortcode
 		add_action( 'widgets_init', array( $this, 'shortcodes_init' ) );
@@ -177,126 +168,19 @@ class WpWithPersona {
 		// AJAX handlers
 		add_action( 'wp_ajax_save_persona_status', array( $this, 'save_persona_status' ) );
 		add_action( 'wp_ajax_nopriv_save_persona_status', array( $this, 'save_persona_status' ) );
+		add_action( 'wp_ajax_get_inquiry_details', array( $this, 'get_inquiry_details_ajax' ) );
+		add_action( 'wp_ajax_nopriv_get_inquiry_details', array( $this, 'get_inquiry_details_ajax' ) );
 
 		// Update Persona reference ID when user registers
 		add_action( 'user_register', array( $this, 'update_persona_reference_id' ) );
+
+		// Display inquiry data in admin area
+		add_action( 'admin_notices', array( $this, 'display_inquiry_data_admin' ) );
 	} // End __construct ()
 
-	/**
-	 * Register user in Persona after creation.
-	 * Limit number of registrations per month
-	 *
-	 * @since    1.0.0
-	 */
-	public function wp_withpersona_new_user( $user_id ) {
-		$persona_code = plugin_dir_path( __DIR__ ) . 'includes/persona_code.php';
-		if ( file_exists( $persona_code ) ) {
-			require_once $persona_code;
-			// echo "<h1>Fake Persona</h1>";
-		} else {
-			echo "<h1>Error, $persona_code not found</h1>";
-		}
 
-		if ( isset( $_POST['persona_id'] ) ) {
-			update_user_meta( $user_id, 'persona_id', $_POST['persona_id'] );
-		}
-	}
 
-	/**
-	 * Register user post after creation.
-	 * Limit number of registrations per month
-	 *
-	 * @since    1.2
-	 */
-	public function wp_withpersona_register_user_post( $user_id ) {
-		$persona_code = plugin_dir_path( __DIR__ ) . 'public/register_user_post.php';
-		if ( file_exists( $persona_code ) ) {
-			require_once $persona_code;
-		} else {
-			echo "<h1>Error, $persona_code not found</h1>";
-		}
-		return $user_id;
-	}
 
-	/**
-	 * Register user after post creation.
-	 * Limit number of registrations per month
-	 *
-	 * @since    1.0.0
-	 */
-	// public function wp_withpersona_user_register( $user_id ) {
-	// $persona_code = plugin_dir_path( __DIR__ ) . 'public/user_register.php';
-	// if ( file_exists( $persona_code ) ) {
-	// require_once $persona_code;
-	// } else {
-	// echo "<h1>Error, $persona_code not found</h1>";
-	// die( 'Error' );
-	// }
-	// return $user_id;
-	// }
-
-	/**
-	 * Register new user after creation.
-	 * Handles both regular and AJAX registration flows
-	 *
-	 * @param int $user_id The user ID of the newly registered user.
-	 * @return int|WP_Error|void The user ID on success, WP_Error on failure, or void for AJAX responses
-	 * @since    1.0.0
-	 */
-	public function wp_withpersona_new_user_register( $user_id ) {
-		// Check if this is an AJAX request
-		if ( wp_doing_ajax() ) {
-			$this->handle_persona_registration( $user_id );
-			return;
-		}
-
-		// For non-AJAX requests, proceed with normal flow
-		$this->handle_persona_registration( $user_id );
-		return $user_id;
-	}
-
-	/**
-	 * Handle Persona registration process
-	 *
-	 * @param int $user_id The user ID to process
-	 * @return void
-	 */
-	private function handle_persona_registration( $user_id ) {
-		// Get user data
-		$user = get_user_by( 'id', $user_id );
-		if ( ! $user ) {
-			if ( wp_doing_ajax() ) {
-				wp_send_json_error( array( 'message' => 'User not found' ) );
-			}
-			return;
-		}
-
-		// Get Persona ID if it exists
-		$persona_id = get_user_meta( $user_id, 'persona_id', true );
-
-		// If we have a Persona ID, process it
-		if ( $persona_id ) {
-			// Here you would add your Persona-specific logic
-			// For example, making API calls to Persona, storing additional data, etc.
-
-			if ( wp_doing_ajax() ) {
-				wp_send_json_success(
-					array(
-						'user_id'      => $user_id,
-						'persona_id'   => $persona_id,
-						'redirect_url' => home_url( '/persona-verification/' ), // Adjust this URL as needed
-					)
-				);
-			}
-		} elseif ( wp_doing_ajax() ) {
-			wp_send_json_success(
-				array(
-					'user_id'      => $user_id,
-					'redirect_url' => home_url( '/registration-complete/' ), // Adjust this URL as needed
-				)
-			);
-		}
-	}
 
 	/**
 	 * Initialize shortcodes of the site.
@@ -343,40 +227,13 @@ class WpWithPersona {
 	 * @since    1.0.0
 	 */
 	public function wp_withpersona_shortcode() {
-		// get the AQL result via webservice
-		// $homepage = file_get_contents( 'http://54.210.194.36:3000/table' );
-		ob_start();
-		// include plugin_dir_path( __DIR__ ) . 'templates/wp_withpersona-display.php';
-		include plugin_dir_path( __DIR__ ) . 'includes/persona_code.php';
-		$o = ob_get_clean();
-		return $o;
+		// Use the more complete verification system instead of the simple Persona_Code
+		// This provides better integration with WordPress and proper event handling
+		$verification = WpWithPersona_Verification::instance( $this );
+		return $verification->render_verification_content();
 	}
 
-	/**
-	 * Load frontend CSS.
-	 *
-	 * @access  public
-	 * @return void
-	 * @since   1.0.0
-	 */
-	public function enqueue_styles() {
-		wp_enqueue_style( 'wp-jquery-ui-dialog' );
-		wp_register_style( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'css/frontend.css', array(), $this->_version );
-		wp_enqueue_style( $this->_token . '-frontend' );
-	} // End enqueue_styles ()
 
-	/**
-	 * Load frontend Javascript.
-	 *
-	 * @access  public
-	 * @return  void
-	 * @since   1.0.0
-	 */
-	public function enqueue_scripts() {
-		wp_enqueue_script( 'wp-jquery-ui-dialog' );
-		wp_register_script( $this->_token . '-frontend', esc_url( $this->assets_url ) . 'js/frontend' . $this->script_suffix . '.js', array( 'jquery' ), $this->_version, true );
-		wp_enqueue_script( $this->_token . '-frontend' );
-	} // End enqueue_scripts ()
 
 	/**
 	 * Admin enqueue style.
@@ -513,6 +370,8 @@ class WpWithPersona {
 		update_option( $this->_token . '_version', $this->_version );
 	} // End _log_version_number ()
 
+
+
 	/**
 	 * Save Persona verification status
 	 */
@@ -523,20 +382,44 @@ class WpWithPersona {
 			wp_send_json_error( 'Status not provided' );
 		}
 
+		$status     = sanitize_text_field( $_POST['status'] );
+		$inquiry_id = isset( $_POST['inquiryId'] ) ? sanitize_text_field( $_POST['inquiryId'] ) : '';
+
+		// Validate status
+		$valid_statuses = array( 'created', 'pending', 'completed', 'expired', 'failed', 'needs_review', 'approved', 'declined' );
+		if ( ! in_array( $status, $valid_statuses ) ) {
+			wp_send_json_error( 'Invalid status' );
+		}
+
 		// Start session if not already started
 		if ( session_status() === PHP_SESSION_NONE ) {
 			session_start();
 		}
 
 		// Save status to session
-		$_SESSION['persona_verification_status'] = sanitize_text_field( $_POST['status'] );
+		$_SESSION['persona_verification_status'] = $status;
+		if ( $inquiry_id ) {
+			$_SESSION['persona_verification_inquiry_id'] = $inquiry_id;
+		}
+
+		// Log the save operation
+		error_log( 'WP WithPersona: Saving verification status - Status: ' . $status . ', Inquiry ID: ' . $inquiry_id . ', Session ID: ' . session_id() );
 
 		// If user is logged in, also save to user meta
 		if ( is_user_logged_in() ) {
-			update_user_meta( get_current_user_id(), 'persona_verification_status', sanitize_text_field( $_POST['status'] ) );
+			$user_id = get_current_user_id();
+			update_user_meta( $user_id, 'persona_verification_status', $status );
+			if ( $inquiry_id ) {
+				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+			}
+			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+			
+			error_log( 'WP WithPersona: Saved to user meta for user ID: ' . $user_id );
+		} else {
+			error_log( 'WP WithPersona: User not logged in, saved to session only' );
 		}
 
-		wp_send_json_success( 'Status saved' );
+		wp_send_json_success( array( 'status' => $status, 'inquiry_id' => $inquiry_id ) );
 	}
 
 	/**
@@ -551,14 +434,38 @@ class WpWithPersona {
 		if ( isset( $_SESSION['persona_reference_id'] ) ) {
 			// Get the verification status from session
 			$verification_status = isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : 'not_started';
+			$inquiry_id          = isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '';
 
 			// Save verification status to user meta
 			update_user_meta( $user_id, 'persona_verification_status', $verification_status );
 
+			// Save inquiry ID to user meta if it exists
+			if ( $inquiry_id ) {
+				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+			}
+
 			// Clear session data
 			unset( $_SESSION['persona_reference_id'] );
 			unset( $_SESSION['persona_verification_status'] );
+			unset( $_SESSION['persona_verification_inquiry_id'] );
 		}
+	}
+
+	/**
+	 * Localize script data for frontend
+	 */
+	public function localize_script_data() {
+		wp_localize_script(
+			'wp-withpersona-frontend',
+			'wpWithPersona',
+			array(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+				'nonces'  => array(
+					'save_persona_status' => wp_create_nonce( 'save_persona_status' ),
+					'get_inquiry_details' => wp_create_nonce( 'get_inquiry_details' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -583,5 +490,184 @@ class WpWithPersona {
 			true
 		);
 		wp_enqueue_script( 'wp-withpersona-frontend' );
+
+		// Localize script data
+		$this->localize_script_data();
+	}
+
+	/**
+	 * Retrieve inquiry details from Persona API
+	 *
+	 * @param string $inquiry_id The inquiry ID to retrieve
+	 * @return array|WP_Error The inquiry data or WP_Error on failure
+	 */
+	public function get_inquiry_details( $inquiry_id ) {
+		$api_key = get_option( 'wpwithpersona_api_key' );
+
+		if ( empty( $api_key ) ) {
+			return new WP_Error( 'no_api_key', 'Persona API key not configured' );
+		}
+
+		if ( empty( $inquiry_id ) ) {
+			return new WP_Error( 'no_inquiry_id', 'Inquiry ID is required' );
+		}
+
+		$api_url = 'https://api.withpersona.com/api/v1/inquiries/' . urlencode( $inquiry_id );
+
+		$response = wp_remote_get(
+			$api_url,
+			array(
+				'headers' => array(
+					'Authorization' => 'Bearer ' . $api_key,
+					'Content-Type'  => 'application/json',
+				),
+				'timeout' => 30,
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+		$response_body = wp_remote_retrieve_body( $response );
+
+		if ( $response_code !== 200 ) {
+			$error_message = 'API request failed with status ' . $response_code;
+			if ( ! empty( $response_body ) ) {
+				$error_data = json_decode( $response_body, true );
+				if ( $error_data && isset( $error_data['errors'] ) ) {
+					$error_message .= ': ' . implode( ', ', array_column( $error_data['errors'], 'title' ) );
+				}
+			}
+			return new WP_Error( 'api_error', $error_message );
+		}
+
+		$data = json_decode( $response_body, true );
+
+		if ( ! $data || ! isset( $data['data'] ) ) {
+			return new WP_Error( 'invalid_response', 'Invalid response from Persona API' );
+		}
+
+		return $data['data'];
+	}
+
+	/**
+	 * Get stored inquiry data for a user
+	 *
+	 * @param int $user_id The user ID to get data for
+	 * @return array The inquiry data
+	 */
+	public function get_user_inquiry_data( $user_id = null ) {
+		if ( ! $user_id ) {
+			$user_id = get_current_user_id();
+		}
+
+		if ( ! $user_id ) {
+			return array();
+		}
+
+		$inquiry_data = array(
+			'inquiry_id'          => get_user_meta( $user_id, 'persona_verification_inquiry_id', true ),
+			'status'              => get_user_meta( $user_id, 'persona_inquiry_status', true ),
+			'created_at'          => get_user_meta( $user_id, 'persona_inquiry_created_at', true ),
+			'completed_at'        => get_user_meta( $user_id, 'persona_inquiry_completed_at', true ),
+			'fields'              => get_user_meta( $user_id, 'persona_inquiry_fields', true ),
+			'behaviors'           => get_user_meta( $user_id, 'persona_inquiry_behaviors', true ),
+			'relationships'       => get_user_meta( $user_id, 'persona_inquiry_relationships', true ),
+			'verification_status' => get_user_meta( $user_id, 'persona_verification_status', true ),
+		);
+
+		// Convert stored data back to arrays if they were serialized
+		if ( is_string( $inquiry_data['fields'] ) ) {
+			$inquiry_data['fields'] = maybe_unserialize( $inquiry_data['fields'] );
+		}
+		if ( is_string( $inquiry_data['behaviors'] ) ) {
+			$inquiry_data['behaviors'] = maybe_unserialize( $inquiry_data['behaviors'] );
+		}
+		if ( is_string( $inquiry_data['relationships'] ) ) {
+			$inquiry_data['relationships'] = maybe_unserialize( $inquiry_data['relationships'] );
+		}
+
+		return $inquiry_data;
+	}
+
+	/**
+	 * Display inquiry data in admin area
+	 */
+	public function display_inquiry_data_admin() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$user_id      = get_current_user_id();
+		$inquiry_data = $this->get_user_inquiry_data( $user_id );
+
+		if ( empty( $inquiry_data['inquiry_id'] ) ) {
+			return;
+		}
+
+		?>
+		<div class="notice notice-info">
+			<h3><?php esc_html_e( 'Persona Inquiry Data', 'wp-withpersona' ); ?></h3>
+			<table class="form-table">
+				<tr>
+					<th><?php esc_html_e( 'Inquiry ID', 'wp-withpersona' ); ?></th>
+					<td><?php echo esc_html( $inquiry_data['inquiry_id'] ); ?></td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Status', 'wp-withpersona' ); ?></th>
+					<td><?php echo esc_html( $inquiry_data['status'] ); ?></td>
+				</tr>
+				<tr>
+					<th><?php esc_html_e( 'Verification Status', 'wp-withpersona' ); ?></th>
+					<td><?php echo esc_html( $inquiry_data['verification_status'] ); ?></td>
+				</tr>
+				<?php if ( ! empty( $inquiry_data['fields'] ) ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Collected Fields', 'wp-withpersona' ); ?></th>
+					<td>
+						<ul>
+						<?php foreach ( $inquiry_data['fields'] as $field_name => $field_value ) : ?>
+							<li><strong><?php echo esc_html( $field_name ); ?>:</strong> <?php echo esc_html( $field_value ); ?></li>
+						<?php endforeach; ?>
+						</ul>
+					</td>
+				</tr>
+				<?php endif; ?>
+				<?php if ( ! empty( $inquiry_data['behaviors'] ) ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Behavior Data', 'wp-withpersona' ); ?></th>
+					<td>
+						<details>
+							<summary><?php esc_html_e( 'View Behavior Data', 'wp-withpersona' ); ?></summary>
+							<pre><?php echo esc_html( print_r( $inquiry_data['behaviors'], true ) ); ?></pre>
+						</details>
+					</td>
+				</tr>
+				<?php endif; ?>
+			</table>
+		</div>
+		<?php
+	}
+
+	/**
+	 * AJAX handler to retrieve inquiry details
+	 */
+	public function get_inquiry_details_ajax() {
+		check_ajax_referer( 'get_inquiry_details', 'nonce' );
+
+		if ( ! isset( $_POST['inquiry_id'] ) ) {
+			wp_send_json_error( 'Inquiry ID not provided' );
+		}
+
+		$inquiry_id   = sanitize_text_field( $_POST['inquiry_id'] );
+		$inquiry_data = $this->get_inquiry_details( $inquiry_id );
+
+		if ( is_wp_error( $inquiry_data ) ) {
+			wp_send_json_error( $inquiry_data->get_error_message() );
+		}
+
+		wp_send_json_success( $inquiry_data );
 	}
 }

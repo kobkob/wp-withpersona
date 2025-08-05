@@ -63,7 +63,6 @@ class WpWithPersona_Verification {
 		add_action( 'admin_notices', array( $this, 'check_verification_page_status' ) );
 
 		// Register AJAX handlers
-		add_action( 'wp_ajax_save_persona_status', array( $this, 'handle_save_persona_status' ) );
 		add_action( 'wp_ajax_update_user_verification_status', array( $this, 'handle_update_user_verification_status' ) );
 
 		// Check if required settings are configured
@@ -147,33 +146,78 @@ class WpWithPersona_Verification {
 
 		$user = get_user_by( 'id', $user_id );
 		if ( ! $user ) {
-			// error_log('User not found: ' . $user_id);
 			return false;
 		}
 
 		// Get verification status from user meta
 		$verification_status = get_user_meta( $user_id, 'persona_verification_status', true );
 		$last_checked        = get_user_meta( $user_id, 'persona_verification_last_checked', true );
-
-		// error_log('Current verification status: ' . $verification_status);
-		// error_log('Last checked: ' . $last_checked);
+		$inquiry_id          = get_user_meta( $user_id, 'persona_verification_inquiry_id', true );
 
 		// Check for cache bust parameter
 		$force_check = isset( $_GET['update_verification'] ) && $_GET['update_verification'] === '1';
 		if ( $force_check ) {
-			// error_log('Cache bust requested - forcing fresh verification check');
-			// Clear the cache by setting last_checked to 0
 			update_user_meta( $user_id, 'persona_verification_last_checked', 0 );
 			$last_checked = 0;
 		}
 
 		// If we checked recently (within last hour), return cached status
 		if ( $verification_status && $last_checked && ( time() - $last_checked ) < 3600 ) {
-			// error_log('Using cached verification status for user ' . $user_id . ': ' . $verification_status);
 			return $verification_status === 'approved' || $verification_status === 'completed' || $verification_status === 'verified';
 		}
 
-		// Make API call to Persona to verify user
+		// If we have a specific inquiry ID, use the detailed inquiry endpoint
+		if ( ! empty( $inquiry_id ) ) {
+			$inquiry_data = $this->parent->get_inquiry_details( $inquiry_id );
+
+			if ( ! is_wp_error( $inquiry_data ) && isset( $inquiry_data['attributes'] ) ) {
+				$attributes  = $inquiry_data['attributes'];
+				$status      = isset( $attributes['status'] ) ? $attributes['status'] : 'unknown';
+				$is_verified = $status === 'approved' || $status === 'completed' || $status === 'verified';
+
+				// Update user meta with verification status
+				update_user_meta( $user_id, 'persona_verification_status', $status );
+				update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+				if ( isset( $attributes['completed-at'] ) ) {
+					update_user_meta( $user_id, 'persona_verification_completed_at', $attributes['completed-at'] );
+				}
+
+				// Process and store detailed inquiry data
+				$attributes = $inquiry_data['attributes'] ?? array();
+				$fields     = $attributes['fields'] ?? array();
+
+				// Store basic inquiry information
+				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_data['id'] );
+				update_user_meta( $user_id, 'persona_inquiry_status', $attributes['status'] ?? '' );
+				update_user_meta( $user_id, 'persona_inquiry_created_at', $attributes['created-at'] ?? '' );
+				update_user_meta( $user_id, 'persona_inquiry_completed_at', $attributes['completed-at'] ?? '' );
+
+				// Store user fields if available
+				if ( ! empty( $fields ) ) {
+					$user_fields = array();
+					foreach ( $fields as $field_name => $field_data ) {
+						if ( isset( $field_data['value'] ) && ! empty( $field_data['value'] ) ) {
+							$user_fields[ $field_name ] = $field_data['value'];
+						}
+					}
+					update_user_meta( $user_id, 'persona_inquiry_fields', $user_fields );
+				}
+
+				// Store behavior data if available
+				if ( isset( $attributes['behaviors'] ) ) {
+					update_user_meta( $user_id, 'persona_inquiry_behaviors', $attributes['behaviors'] );
+				}
+
+				// Store relationships if available
+				if ( isset( $inquiry_data['relationships'] ) ) {
+					update_user_meta( $user_id, 'persona_inquiry_relationships', $inquiry_data['relationships'] );
+				}
+
+				return $is_verified;
+			}
+		}
+
+		// Fallback to the original API call for users without specific inquiry ID
 		$response = wp_remote_get(
 			"https://withpersona.com/api/v1/inquiries?filter[reference-id]=$user_id&filter[inquiry-template-id]=$template_id",
 			array(
@@ -193,7 +237,6 @@ class WpWithPersona_Verification {
 
 		// Check if we have valid data
 		if ( empty( $body['data'] ) || ! is_array( $body['data'] ) ) {
-			// error_log('No verification data found for user ' . $user_id . ' - setting as unverified');
 			update_user_meta( $user_id, 'persona_verification_status', 'unverified' );
 			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
 			return false;
@@ -201,7 +244,6 @@ class WpWithPersona_Verification {
 
 		$data = $body['data'];
 		if ( empty( $data[0] ) ) {
-			// error_log('No verification inquiries found for user ' . $user_id . ' - setting as unverified');
 			update_user_meta( $user_id, 'persona_verification_status', 'unverified' );
 			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
 			return false;
@@ -209,7 +251,6 @@ class WpWithPersona_Verification {
 
 		$latest_inquiry = $data[0];
 		if ( empty( $latest_inquiry['attributes'] ) ) {
-			// error_log('Invalid inquiry data structure for user ' . $user_id . ' - setting as unverified');
 			update_user_meta( $user_id, 'persona_verification_status', 'unverified' );
 			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
 			return false;
@@ -226,7 +267,11 @@ class WpWithPersona_Verification {
 			update_user_meta( $user_id, 'persona_verification_completed_at', $attributes['completed-at'] );
 		}
 
-		// error_log('Updated verification status for user ' . $user_id . ': ' . $status . ' (verified: ' . ($is_verified ? 'yes' : 'no') . ')');
+		// Store the inquiry ID for future detailed checks
+		if ( isset( $latest_inquiry['id'] ) ) {
+			update_user_meta( $user_id, 'persona_verification_inquiry_id', $latest_inquiry['id'] );
+		}
+
 		return $is_verified;
 	}
 
@@ -332,14 +377,40 @@ class WpWithPersona_Verification {
 	}
 
 	/**
+	 * Get the verification page URL for redirect after completion
+	 *
+	 * @return string The verification page URL
+	 */
+	protected function get_verification_redirect_url() {
+		$verification_url = $this->get_verification_page_url();
+		if ( $verification_url ) {
+			return $verification_url . '?update_verification=1';
+		}
+		return '';
+	}
+
+	/**
+	 * Get the inquiry ID for the current user
+	 *
+	 * @return string The inquiry ID or empty string
+	 */
+	protected function get_inquiry_id() {
+		if ( is_user_logged_in() ) {
+			return get_user_meta( get_current_user_id(), 'persona_verification_inquiry_id', true );
+		}
+		return $this->get_current_inquiry_id();
+	}
+
+	/**
 	 * Add verification meta to new users
 	 *
 	 * @param int $user_id The new user ID
 	 */
 	public function add_verification_meta( $user_id ) {
-		add_user_meta( $user_id, 'persona_verification_status', 'unverified' );
-		add_user_meta( $user_id, 'persona_verification_last_checked', 0 );
-		add_user_meta( $user_id, 'persona_verification_timestamp', 0 ); // When they were actually verified
+		update_user_meta( $user_id, 'persona_verification_status', 'unverified' );
+		update_user_meta( $user_id, 'persona_verification_last_checked', 0 );
+		update_user_meta( $user_id, 'persona_verification_timestamp', 0 );
+		update_user_meta( $user_id, 'persona_verification_inquiry_id', '' );
 	}
 
 	/**
@@ -432,11 +503,27 @@ class WpWithPersona_Verification {
 
 	/**
 	 * Render verification content via shortcode
+	 *
+	 * This method is the single source of truth for Persona verification rendering.
+	 * It returns buffered content and includes JavaScript for handling verification
+	 * completion events and page redirects after successful verification.
+	 *
+	 * Features:
+	 * - Returns buffered content (ob_start/ob_get_clean)
+	 * - Includes JavaScript event handling for verification completion
+	 * - Processes shortcode context and user verification status
+	 * - Handles page redirects after verification completion
+	 * - Complete WordPress integration with proper hooks and filters
+	 *
+	 * Usage: Called automatically via [persona_verification] and [wp_withpersona] shortcodes
+	 *
+	 * @return string The rendered verification HTML content
 	 */
 	public function render_verification_content() {
 		$reference_id        = $this->get_reference_id();
 		$verification_status = $this->get_verification_status();
 		$settings            = $this->get_persona_settings();
+		$inquiry_id          = $this->get_inquiry_id();
 
 		if ( ! $this->are_settings_configured() ) {
 			$this->render_configuration_error();
@@ -444,7 +531,7 @@ class WpWithPersona_Verification {
 		}
 
 		ob_start();
-		$this->render_persona_container( $verification_status );
+		$this->render_persona_container( $verification_status, $inquiry_id );
 		$this->render_persona_styles();
 		$this->render_persona_scripts(
 			$settings['template_id'],
@@ -457,12 +544,30 @@ class WpWithPersona_Verification {
 		?>
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
+				// Get verification redirect URL from backend
+				var verificationRedirectUrl = '<?php echo esc_js( $this->get_verification_redirect_url() ); ?>';
+				
+				// Check if we're on the verification page
+				var isOnVerificationPage = window.location.pathname === '<?php echo esc_js( parse_url( $this->get_verification_page_url(), PHP_URL_PATH ) ); ?>';
+				
 				// Listen for Persona completion event
-				jQuery(document).on('personaVerification', function(event, status) {
+				jQuery(document).on('personaVerification', function(event, status, inquiryId) {
 					console.log('personaVerification event triggered!');
 					console.log('Status:', status);
-					// Redirect to the same page with cache bust parameter
-					window.location.href = window.location.pathname + '?update_verification=1';
+					console.log('Inquiry ID:', inquiryId);
+					
+					// Only redirect if we're on the verification page
+					if (isOnVerificationPage) {
+						if (verificationRedirectUrl) {
+							window.location.href = verificationRedirectUrl;
+						} else {
+							// Fallback to current page if no verification URL is set
+							window.location.href = window.location.pathname + '?update_verification=1';
+						}
+					} else {
+						// If not on verification page, just update the status without redirecting
+						console.log('Persona verification completed, but not on verification page - no redirect needed');
+					}
 				});
 			});
 		</script>
@@ -546,19 +651,7 @@ class WpWithPersona_Verification {
 		}
 	}
 
-	/**
-	 * Handle AJAX request to save Persona verification status
-	 */
-	public function handle_save_persona_status() {
-		// check_ajax_referer( 'save_persona_status', 'nonce' );
 
-		if ( isset( $_POST['status'] ) ) {
-			$_SESSION['persona_verification_status'] = sanitize_text_field( $_POST['status'] );
-			wp_send_json_success( 'Status saved' );
-		}
-
-		wp_send_json_error( 'Invalid request' );
-	}
 
 	/**
 	 * Handle AJAX request to update user verification status
@@ -570,8 +663,16 @@ class WpWithPersona_Verification {
 			$user_id     = get_current_user_id();
 			$is_verified = isset( $_POST['is_verified'] ) ? (bool) $_POST['is_verified'] : false;
 
+			// Preserve existing inquiry ID
+			$existing_inquiry_id = get_user_meta( $user_id, 'persona_verification_inquiry_id', true );
+
 			update_user_meta( $user_id, 'persona_verification_status', $is_verified ? 'verified' : 'unverified' );
 			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+
+			// Restore inquiry ID if it was lost
+			if ( $existing_inquiry_id && ! get_user_meta( $user_id, 'persona_verification_inquiry_id', true ) ) {
+				update_user_meta( $user_id, 'persona_verification_inquiry_id', $existing_inquiry_id );
+			}
 
 			wp_send_json_success( 'User verification status updated' );
 		}

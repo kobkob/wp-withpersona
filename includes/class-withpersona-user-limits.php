@@ -16,7 +16,7 @@ class WP_WithPersona_User_Limits {
 	 * Initialize the class
 	 */
 	public function __construct() {
-		add_action( 'ps_fm_before_registration_form_save_action_frontend', array( $this, 'check_daily_registration_limit' ), 10, 4 );
+		add_action( 'ps_fm_after_registration_form_save_action', array( $this, 'check_daily_registration_limit' ), 10, 4 );
 	}
 
 	/**

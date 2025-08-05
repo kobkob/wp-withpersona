@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Template for Persona verification script
  *
@@ -44,6 +43,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 						client.open();
 						jQuery(e.target).text("Verify with Persona");
 					},
+					onCreate: function(inquiryId) {
+						console.log("Inquiry created with ID: " + inquiryId);
+						
+						// Save inquiry ID immediately when created
+						jQuery.ajax({
+							url: ajaxurl,
+							type: "POST",
+							data: {
+								action: "save_persona_status",
+								status: "created",
+								inquiryId: inquiryId,
+								nonce: personaConfig.nonce
+							},
+							success: function(response) {
+								console.log("Inquiry ID saved:", response);
+							}
+						});
+						
+						window.WP_WITH_PERSONA_INQUIRY_ID = inquiryId;
+					},
 					onCancel: function() {
 						console.log("Canceled");
 						jQuery("#persona-status").text("Canceled, please try again.");
@@ -61,23 +80,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 							jQuery(personaButton).text('Already Verified').prop('disabled', true);
 						}
 
+						// Save both inquiry ID and status immediately
 						jQuery.ajax({
 							url: ajaxurl,
 							type: "POST",
 							data: {
 								action: "save_persona_status",
 								status: status,
+								inquiryId: inquiryId,
 								nonce: personaConfig.nonce
 							},
 							success: function(response) {
-								// console.log("Status saved:", response);
+								console.log("Status and inquiry ID saved:", response);
 							}
 						});
 
 						window.WP_WITH_PERSONA_STATUS = status;
+						if (inquiryId) {
+							window.WP_WITH_PERSONA_INQUIRY_ID = inquiryId;
+						}
 
 						// Trigger custom event
-						jQuery(document).trigger('personaVerification', [status]);
+						jQuery(document).trigger('personaVerification', [status, inquiryId]);
 					},
 					onError: function(error) {
 						console.error("Error:", error);

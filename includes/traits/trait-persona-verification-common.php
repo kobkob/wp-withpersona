@@ -2,6 +2,16 @@
 
 /**
  * Trait containing common Persona verification functionality
+ *
+ * This trait provides shared methods used by the WpWithPersona_Verification class.
+ * It contains the core rendering logic for Persona verification widgets including:
+ * - Settings retrieval and validation
+ * - Container, styles, and scripts rendering
+ * - Error handling and configuration checks
+ * - Reference ID and verification status management
+ *
+ * This trait centralizes the common functionality to avoid code duplication
+ * and maintain consistency across the verification system.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,6 +28,15 @@ trait Persona_Verification_Common {
 			$_SESSION['persona_reference_id'] = 'session_' . uniqid();
 		}
 		return is_user_logged_in() ? get_current_user_id() : $_SESSION['persona_reference_id'];
+	}
+
+	/**
+	 * Get the current inquiry ID from session
+	 *
+	 * @return string The inquiry ID or empty string
+	 */
+	public function get_current_inquiry_id() {
+		return isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '';
 	}
 
 	/**
@@ -136,10 +155,11 @@ trait Persona_Verification_Common {
 	/**
 	 * Render the Persona container
 	 */
-	protected function render_persona_container( $verification_status ) {
+	protected function render_persona_container( $verification_status, $inquiry_id ) {
 		?>
 		<script>
 			window.WP_WITH_PERSONA_STATUS = '<?php echo $verification_status; ?>';
+			window.WP_WITH_PERSONA_INQUIRY_ID = '<?php echo $inquiry_id; ?>';
 		</script>
 		<div id="persona-container">
 			<button class="button button-primary" id="persona-button" <?php echo $verification_status === 'completed' ? 'disabled' : ''; ?> style="white-space: nowrap;"><?php echo $verification_status === 'completed' ? esc_html__( 'Already Verified', 'wp-withpersona' ) : esc_html__( 'Verify with Persona', 'wp-withpersona' ); ?></button>

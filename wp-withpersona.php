@@ -14,17 +14,17 @@
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
+	exit; // Exit if accessed directly.
 }
 
-// Define plugin directory path
+// Define plugin directory path.
 define( 'WP_WITH_PERSONA_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
-// Global Shortcodes
+// Global Shortcodes.
 define( 'WPWITHPERSONASHORTCODE', 'wp_withpersona' );
 define( 'WPWITHPERSONASHORTCODEOPT', 'persona_verification' );
 
-// Load plugin classes
+// Load plugin classes.
 require_once 'includes/class-withpersona.php';
 require_once 'includes/class-withpersona-settings.php';
 require_once 'includes/class-withpersona-admin-api.php';
@@ -45,7 +45,7 @@ function wp_withpersona() {
 		$instance->settings = WpWithPersona_Settings::instance( $instance );
 	}
 
-	// Initialize verification
+	// Initialize verification.
 	$verification = WpWithPersona_Verification::instance( $instance );
 
 	return $instance;
@@ -60,10 +60,10 @@ function activate_wp_withpersona() {
 	WP_WithPersona_Activator::activate();
 }
 
-// Initialize the plugin
+// Initialize the plugin.
 wp_withpersona();
 
-// Register activation hook
+// Register activation hook.
 register_activation_hook( __FILE__, 'activate_wp_withpersona' );
 
 /*
