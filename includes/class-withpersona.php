@@ -375,80 +375,158 @@ class WpWithPersona {
 	/**
 	 * Save Persona verification status
 	 */
+	/**
+	 * AJAX handler for saving Persona verification status
+	 */
 	public function save_persona_status() {
 		check_ajax_referer( 'save_persona_status', 'nonce' );
 
-		if ( ! isset( $_POST['status'] ) ) {
-			wp_send_json_error( 'Status not provided' );
+		$validation_result = $this->validate_persona_status_request();
+		if ( is_wp_error( $validation_result ) ) {
+			wp_send_json_error( $validation_result->get_error_message() );
 		}
 
-		$status     = sanitize_text_field( $_POST['status'] );
+		$status = $validation_result['status'];
+		$inquiry_id = $validation_result['inquiry_id'];
+		$email = isset( $_POST['email'] ) ? sanitize_email( $_POST['email'] ) : '';
+
+		$this->start_session();
+		$this->save_to_session( $status, $inquiry_id );
+		$this->save_to_user_meta_if_logged_in( $status, $inquiry_id );
+
+		// Also save to transient if email is provided
+		if ( ! empty( $email ) ) {
+			$this->save_to_transient( $email, $status, $inquiry_id );
+		}
+
+		wp_send_json_success(
+			array(
+				'status'     => $status,
+				'inquiry_id' => $inquiry_id,
+			)
+		);
+	}
+
+	/**
+	 * Validate the Persona status request
+	 *
+	 * @return array|WP_Error Validated data or error
+	 */
+	private function validate_persona_status_request() {
+		if ( ! isset( $_POST['status'] ) ) {
+			return new WP_Error( 'missing_status', 'Status not provided' );
+		}
+
+		$status = sanitize_text_field( $_POST['status'] );
 		$inquiry_id = isset( $_POST['inquiryId'] ) ? sanitize_text_field( $_POST['inquiryId'] ) : '';
 
-		// Validate status
 		$valid_statuses = array( 'created', 'pending', 'completed', 'expired', 'failed', 'needs_review', 'approved', 'declined' );
 		if ( ! in_array( $status, $valid_statuses ) ) {
-			wp_send_json_error( 'Invalid status' );
+			return new WP_Error( 'invalid_status', 'Invalid status' );
 		}
 
-		// Start session if not already started
+		return array(
+			'status' => $status,
+			'inquiry_id' => $inquiry_id,
+		);
+	}
+
+	/**
+	 * Start session if not already started
+	 */
+	public function start_session() {
 		if ( session_status() === PHP_SESSION_NONE ) {
 			session_start();
 		}
+	}
 
-		// Save status to session
+	/**
+	 * Save verification data to session
+	 *
+	 * @param string $status The verification status
+	 * @param string $inquiry_id The inquiry ID
+	 */
+	public function save_to_session( $status, $inquiry_id ) {
 		$_SESSION['persona_verification_status'] = $status;
 		if ( $inquiry_id ) {
 			$_SESSION['persona_verification_inquiry_id'] = $inquiry_id;
 		}
 
-		// Log the save operation
 		error_log( 'WP WithPersona: Saving verification status - Status: ' . $status . ', Inquiry ID: ' . $inquiry_id . ', Session ID: ' . session_id() );
+	}
 
-		// If user is logged in, also save to user meta
-		if ( is_user_logged_in() ) {
-			$user_id = get_current_user_id();
-			update_user_meta( $user_id, 'persona_verification_status', $status );
-			if ( $inquiry_id ) {
-				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
-			}
-			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
-			
-			error_log( 'WP WithPersona: Saved to user meta for user ID: ' . $user_id );
-		} else {
+	/**
+	 * Save verification data to user meta if user is logged in
+	 *
+	 * @param string $status The verification status
+	 * @param string $inquiry_id The inquiry ID
+	 */
+	public function save_to_user_meta_if_logged_in( $status, $inquiry_id ) {
+		if ( ! is_user_logged_in() ) {
 			error_log( 'WP WithPersona: User not logged in, saved to session only' );
+			return;
 		}
 
-		wp_send_json_success( array( 'status' => $status, 'inquiry_id' => $inquiry_id ) );
+		$user_id = get_current_user_id();
+		update_user_meta( $user_id, 'persona_verification_status', $status );
+		if ( $inquiry_id ) {
+			update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+		}
+		update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+
+		error_log( 'WP WithPersona: Saved to user meta for user ID: ' . $user_id );
 	}
 
 	/**
 	 * Update Persona reference ID when user registers
+	 *
+	 * @param int $user_id The user ID
 	 */
 	public function update_persona_reference_id( $user_id ) {
-		if ( session_status() === PHP_SESSION_NONE ) {
-			session_start();
+		$this->start_session();
+
+		if ( ! isset( $_SESSION['persona_reference_id'] ) ) {
+			return;
 		}
 
-		// If we have a session-based reference ID, update it to the user ID
-		if ( isset( $_SESSION['persona_reference_id'] ) ) {
-			// Get the verification status from session
-			$verification_status = isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : 'not_started';
-			$inquiry_id          = isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '';
+		$session_data = $this->get_session_verification_data();
+		$this->save_session_data_to_user_meta( $user_id, $session_data );
+		$this->clear_session_data();
+	}
 
-			// Save verification status to user meta
-			update_user_meta( $user_id, 'persona_verification_status', $verification_status );
+	/**
+	 * Get verification data from session
+	 *
+	 * @return array Session verification data
+	 */
+	private function get_session_verification_data() {
+		return array(
+			'verification_status' => isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : 'not_started',
+			'inquiry_id' => isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '',
+		);
+	}
 
-			// Save inquiry ID to user meta if it exists
-			if ( $inquiry_id ) {
-				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
-			}
+	/**
+	 * Save session verification data to user meta
+	 *
+	 * @param int $user_id The user ID
+	 * @param array $session_data The session data
+	 */
+	private function save_session_data_to_user_meta( $user_id, $session_data ) {
+		update_user_meta( $user_id, 'persona_verification_status', $session_data['verification_status'] );
 
-			// Clear session data
-			unset( $_SESSION['persona_reference_id'] );
-			unset( $_SESSION['persona_verification_status'] );
-			unset( $_SESSION['persona_verification_inquiry_id'] );
+		if ( ! empty( $session_data['inquiry_id'] ) ) {
+			update_user_meta( $user_id, 'persona_verification_inquiry_id', $session_data['inquiry_id'] );
 		}
+	}
+
+	/**
+	 * Clear session verification data
+	 */
+	private function clear_session_data() {
+		unset( $_SESSION['persona_reference_id'] );
+		unset( $_SESSION['persona_verification_status'] );
+		unset( $_SESSION['persona_verification_inquiry_id'] );
 	}
 
 	/**
@@ -496,23 +574,21 @@ class WpWithPersona {
 	}
 
 	/**
-	 * Retrieve inquiry details from Persona API
+	 * Get inquiry details from Persona API
 	 *
-	 * @param string $inquiry_id The inquiry ID to retrieve
-	 * @return array|WP_Error The inquiry data or WP_Error on failure
+	 * @param string $inquiry_id The inquiry ID
+	 * @return array|false Inquiry data or false on error
 	 */
 	public function get_inquiry_details( $inquiry_id ) {
 		$api_key = get_option( 'wpwithpersona_api_key' );
-
+		
 		if ( empty( $api_key ) ) {
-			return new WP_Error( 'no_api_key', 'Persona API key not configured' );
+			error_log( 'Persona API key not configured for inquiry fetch' );
+			return false;
 		}
 
-		if ( empty( $inquiry_id ) ) {
-			return new WP_Error( 'no_inquiry_id', 'Inquiry ID is required' );
-		}
-
-		$api_url = 'https://api.withpersona.com/api/v1/inquiries/' . urlencode( $inquiry_id );
+		$api_url = 'https://api.withpersona.com/api/v1/inquiries/' . $inquiry_id;
+		error_log( 'Fetching specific inquiry: ' . $api_url );
 
 		$response = wp_remote_get(
 			$api_url,
@@ -526,31 +602,271 @@ class WpWithPersona {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return $response;
+			error_log( 'Persona API error fetching inquiry: ' . $response->get_error_message() );
+			return false;
 		}
 
 		$response_code = wp_remote_retrieve_response_code( $response );
 		$response_body = wp_remote_retrieve_body( $response );
+		
+		error_log( 'API Response Code: ' . $response_code );
+		error_log( 'API Response Body: ' . $response_body );
 
 		if ( $response_code !== 200 ) {
-			$error_message = 'API request failed with status ' . $response_code;
-			if ( ! empty( $response_body ) ) {
-				$error_data = json_decode( $response_body, true );
-				if ( $error_data && isset( $error_data['errors'] ) ) {
-					$error_message .= ': ' . implode( ', ', array_column( $error_data['errors'], 'title' ) );
+			error_log( 'Persona API error fetching inquiry. Response code: ' . $response_code );
+			return false;
+		}
+
+		$body = json_decode( $response_body, true );
+
+		if ( empty( $body['data'] ) ) {
+			error_log( 'No Persona inquiry data found for inquiry ID: ' . $inquiry_id );
+			return false;
+		}
+
+		return $body['data'];
+	}
+
+	/**
+	 * Update user meta with Persona inquiry data
+	 *
+	 * @param int $user_id The user ID
+	 * @param array $inquiry_data The inquiry data from API
+	 */
+	public function update_user_meta_with_inquiry_data( $user_id, $inquiry_data ) {
+		$attributes = $inquiry_data['attributes'];
+		$status = $attributes['status'] ?? 'unknown';
+		$inquiry_id = $inquiry_data['id'];
+
+		error_log( 'Found inquiry ID: ' . $inquiry_id . ' with status: ' . $status );
+
+		// Update core verification data
+		update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+		update_user_meta( $user_id, 'persona_verification_status', $status );
+		update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+
+		// Store additional inquiry data
+		update_user_meta( $user_id, 'persona_inquiry_status', $status );
+		update_user_meta( $user_id, 'persona_inquiry_created_at', $attributes['created-at'] ?? '' );
+		update_user_meta( $user_id, 'persona_inquiry_completed_at', $attributes['completed-at'] ?? '' );
+
+		// Store user fields if available
+		if ( isset( $attributes['fields'] ) && ! empty( $attributes['fields'] ) ) {
+			$user_fields = array();
+			foreach ( $attributes['fields'] as $field_name => $field_data ) {
+				if ( isset( $field_data['value'] ) && ! empty( $field_data['value'] ) ) {
+					$user_fields[ $field_name ] = $field_data['value'];
 				}
 			}
-			return new WP_Error( 'api_error', $error_message );
+			update_user_meta( $user_id, 'persona_inquiry_fields', $user_fields );
 		}
 
-		$data = json_decode( $response_body, true );
-
-		if ( ! $data || ! isset( $data['data'] ) ) {
-			return new WP_Error( 'invalid_response', 'Invalid response from Persona API' );
+		// Store behavior data if available
+		if ( isset( $attributes['behaviors'] ) ) {
+			update_user_meta( $user_id, 'persona_inquiry_behaviors', $attributes['behaviors'] );
 		}
 
-		return $data['data'];
+		// Store relationships if available
+		if ( isset( $inquiry_data['relationships'] ) ) {
+			update_user_meta( $user_id, 'persona_inquiry_relationships', $inquiry_data['relationships'] );
+		}
+
+		error_log( 'Persona inquiry data updated successfully for user ID: ' . $user_id . ' with inquiry ID: ' . $inquiry_id . ' and status: ' . $status );
 	}
+
+	/**
+	 * Fetch and update Persona inquiry data for a user
+	 *
+	 * @param int $user_id The user ID
+	 * @return bool Whether the operation was successful
+	 */
+	public function fetch_and_update_persona_inquiry_data( $user_id ) {
+		error_log( 'Starting API fetch for user ID: ' . $user_id );
+		
+		$inquiry_id = get_user_meta( $user_id, 'persona_verification_inquiry_id', true );
+		
+		if ( empty( $inquiry_id ) ) {
+			error_log( 'No inquiry ID found for user ID: ' . $user_id . '. This is normal if the user has not completed the Persona verification process yet.' );
+			return false;
+		}
+		
+		$inquiry_data = $this->get_inquiry_details( $inquiry_id );
+		if ( ! $inquiry_data ) {
+			return false;
+		}
+
+		$this->update_user_meta_with_inquiry_data( $user_id, $inquiry_data );
+		return true;
+	}
+
+	/**
+	 * Get verification data for user
+	 *
+	 * @param int $user_id The user ID
+	 * @return array|false Verification data or false if not found
+	 */
+	public function get_verification_data( $user_id ) {
+		$verification_status = get_user_meta( $user_id, 'persona_verification_status', true );
+		$inquiry_id = get_user_meta( $user_id, 'persona_verification_inquiry_id', true );
+		
+		if ( empty( $verification_status ) || empty( $inquiry_id ) ) {
+			// Check session as fallback
+			if ( session_status() === PHP_SESSION_NONE ) {
+				session_start();
+			}
+			
+			$session_status = isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : '';
+			$session_inquiry_id = isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '';
+			
+			if ( ! empty( $session_status ) && ! empty( $session_inquiry_id ) ) {
+				// Update user meta with session data
+				update_user_meta( $user_id, 'persona_verification_status', $session_status );
+				update_user_meta( $user_id, 'persona_verification_inquiry_id', $session_inquiry_id );
+				update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+				
+				$verification_status = $session_status;
+				$inquiry_id = $session_inquiry_id;
+				
+				error_log( 'Updated user meta from session data for user ID: ' . $user_id . ' - Status: ' . $verification_status . ', Inquiry ID: ' . $inquiry_id );
+			} else {
+				return false;
+			}
+		}
+		
+		return array(
+			'status' => $verification_status,
+			'inquiry_id' => $inquiry_id
+		);
+	}
+
+	/**
+	 * Ensure verification data is properly saved to user meta
+	 *
+	 * @param int $user_id The user ID
+	 * @return bool Whether data was found and saved
+	 */
+	public function ensure_verification_data_saved( $user_id ) {
+		error_log( 'ensure_verification_data_saved called for user ID: ' . $user_id );
+		
+		$user = get_user_by( 'ID', $user_id );
+		$user_email = $user ? $user->user_email : '';
+		
+		$verification_status = get_user_meta( $user_id, 'persona_verification_status', true );
+		$inquiry_id = get_user_meta( $user_id, 'persona_verification_inquiry_id', true );
+		
+		error_log( 'Current user meta - Status: ' . $verification_status . ', Inquiry ID: ' . $inquiry_id . ', User Email: ' . $user_email );
+		
+		if ( empty( $verification_status ) || empty( $inquiry_id ) ) {
+			$found_data = $this->try_recover_from_transient( $user_id, $user_email );
+			
+			if ( ! $found_data ) {
+				$found_data = $this->try_recover_from_session( $user_id );
+			}
+			
+			if ( ! $found_data ) {
+				error_log( 'No verification data found in transient or session for user ID: ' . $user_id );
+				return false;
+			}
+		} else {
+			error_log( 'User meta already has verification data for user ID: ' . $user_id );
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Try to recover verification data from transient storage
+	 *
+	 * @param int $user_id The user ID
+	 * @param string $user_email The user email
+	 * @return bool Whether data was found and saved
+	 */
+	private function try_recover_from_transient( $user_id, $user_email ) {
+		if ( empty( $user_email ) ) {
+			return false;
+		}
+
+		$transient_key = 'persona_verification_' . md5( $user_email );
+		$transient_data = get_transient( $transient_key );
+		
+		error_log( 'Checking transient with key: ' . $transient_key );
+		
+		if ( $transient_data && isset( $transient_data['status'] ) && isset( $transient_data['inquiry_id'] ) ) {
+			$this->save_verification_data_to_user_meta( $user_id, $transient_data['status'], $transient_data['inquiry_id'] );
+			delete_transient( $transient_key );
+			
+			error_log( 'Ensured verification data saved from transient for user ID: ' . $user_id . ' - Status: ' . $transient_data['status'] . ', Inquiry ID: ' . $transient_data['inquiry_id'] );
+			return true;
+		}
+		
+		error_log( 'No transient data found for key: ' . $transient_key );
+		return false;
+	}
+
+	/**
+	 * Try to recover verification data from session
+	 *
+	 * @param int $user_id The user ID
+	 * @return bool Whether data was found and saved
+	 */
+	private function try_recover_from_session( $user_id ) {
+		if ( session_status() === PHP_SESSION_NONE ) {
+			session_start();
+		}
+		
+		$session_status = isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : '';
+		$session_inquiry_id = isset( $_SESSION['persona_verification_inquiry_id'] ) ? $_SESSION['persona_verification_inquiry_id'] : '';
+		
+		error_log( 'Session data - Status: ' . $session_status . ', Inquiry ID: ' . $session_inquiry_id . ', Session ID: ' . session_id() );
+		
+		if ( ! empty( $session_status ) && ! empty( $session_inquiry_id ) ) {
+			$this->save_verification_data_to_user_meta( $user_id, $session_status, $session_inquiry_id );
+			
+			error_log( 'Ensured verification data saved from session for user ID: ' . $user_id . ' - Status: ' . $session_status . ', Inquiry ID: ' . $session_inquiry_id );
+			return true;
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Save verification data to user meta
+	 *
+	 * @param int $user_id The user ID
+	 * @param string $status The verification status
+	 * @param string $inquiry_id The inquiry ID
+	 */
+	public function save_verification_data_to_user_meta( $user_id, $status, $inquiry_id ) {
+		update_user_meta( $user_id, 'persona_verification_status', $status );
+		update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+		update_user_meta( $user_id, 'persona_verification_last_checked', time() );
+	}
+
+	/**
+	 * Save verification data to transient storage
+	 *
+	 * @param string $email The user email
+	 * @param string $status The verification status
+	 * @param string $inquiry_id The inquiry ID
+	 */
+	public function save_to_transient( $email, $status, $inquiry_id ) {
+		if ( empty( $email ) ) {
+			return;
+		}
+
+		$transient_key = 'persona_verification_' . md5( $email );
+		$verification_data = array(
+			'status' => $status,
+			'inquiry_id' => $inquiry_id,
+			'email' => $email,
+			'timestamp' => time()
+		);
+		
+		set_transient( $transient_key, $verification_data, 3600 ); // 1 hour expiry
+		error_log( 'Stored verification data in transient with key: ' . $transient_key );
+	}
+
+
 
 	/**
 	 * Get stored inquiry data for a user
