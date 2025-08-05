@@ -21,13 +21,8 @@ class WP_WithPersona_Ajax {
 	 * Handle the re-verification request
 	 */
 	public function handle_reverify_user() {
-		// Log the request
-		error_log( 'WP WithPersona: Re-verification request received' );
-		error_log( 'POST data: ' . print_r( $_POST, true ) );
-
 		// Verify nonce
 		$user_id = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
-		error_log( 'User ID: ' . $user_id );
 
 		if ( ! $user_id ) {
 			error_log( 'WP WithPersona: Invalid user ID' );
@@ -59,8 +54,6 @@ class WP_WithPersona_Ajax {
 		// Reset verification status
 		delete_user_meta( $user_id, 'persona_verification_status' );
 		delete_user_meta( $user_id, 'persona_verification_last_checked' );
-
-		error_log( 'WP WithPersona: Successfully reset verification for user ' . $user_id );
 		wp_send_json_success(
 			array(
 				'message' => 'Verification status reset successfully',
