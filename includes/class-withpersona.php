@@ -466,9 +466,9 @@ class WpWithPersona {
 
 			$user_id = get_current_user_id();
 			update_user_meta( $user_id, 'persona_verification_status', $status );
-			if ( $inquiry_id ) {
-				update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
-			}
+		if ( $inquiry_id ) {
+			update_user_meta( $user_id, 'persona_verification_inquiry_id', $inquiry_id );
+		}
 			update_user_meta( $user_id, 'persona_verification_last_checked', time() );
 	}
 
