@@ -396,7 +396,10 @@ class WpWithPersona_Verification {
 	 */
 	protected function get_inquiry_id() {
 		if ( is_user_logged_in() ) {
-			return get_user_meta( get_current_user_id(), 'persona_verification_inquiry_id', true );
+			$inquiry_id = get_user_meta( get_current_user_id(), 'persona_verification_inquiry_id', true );
+			if ( ! empty( $inquiry_id ) ) {
+				return $inquiry_id;
+			}
 		}
 		return $this->get_current_inquiry_id();
 	}
