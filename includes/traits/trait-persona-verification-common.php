@@ -45,23 +45,23 @@ trait Persona_Verification_Common {
 	protected function get_verification_status() {
 		// Clear session data on registration pages
 		$this->clear_session_on_registration_pages();
-		
+
 		// For logged-in users, check user meta first
 		if ( is_user_logged_in() ) {
-			$user_id = get_current_user_id();
+			$user_id             = get_current_user_id();
 			$verification_status = get_user_meta( $user_id, 'persona_verification_status', true );
-			
+
 			error_log( 'Persona Debug - User ID: ' . $user_id . ', User Meta Status: ' . $verification_status );
-			
+
 			if ( ! empty( $verification_status ) ) {
 				return $verification_status;
 			}
 		}
-		
+
 		// Fallback to session data
 		$session_status = isset( $_SESSION['persona_verification_status'] ) ? $_SESSION['persona_verification_status'] : 'not_started';
 		error_log( 'Persona Debug - Session Status: ' . $session_status );
-		
+
 		return $session_status;
 	}
 
@@ -71,40 +71,40 @@ trait Persona_Verification_Common {
 	private function clear_session_on_registration_pages() {
 		// Check if we're on a registration page
 		$is_registration_page = false;
-		
+
 		// Check URL for registration keywords
 		$current_url = $_SERVER['REQUEST_URI'] ?? '';
 		if ( strpos( $current_url, 'registration' ) !== false || strpos( $current_url, 'register' ) !== false ) {
 			$is_registration_page = true;
 			error_log( 'Persona Debug - Registration page detected via URL: ' . $current_url );
 		}
-		
+
 		// Check page content for registration shortcodes
 		if ( is_page() ) {
 			$post = get_post();
 			if ( $post ) {
-				$content = $post->post_content;
-				$has_registration_shortcode = has_shortcode( $content, 'ps_fm_registration' );
+				$content                             = $post->post_content;
+				$has_registration_shortcode          = has_shortcode( $content, 'ps_fm_registration' );
 				$has_customer_registration_shortcode = has_shortcode( $content, 'ps_fm_customer_registration' );
-				
+
 				if ( $has_registration_shortcode || $has_customer_registration_shortcode ) {
 					$is_registration_page = true;
 					error_log( 'Persona Debug - Registration page detected via shortcode' );
 				}
 			}
 		}
-		
+
 		if ( $is_registration_page ) {
 			// Start session if not already started
 			if ( session_status() === PHP_SESSION_NONE ) {
 				session_start();
 			}
-			
+
 			// Clear Persona session data
 			unset( $_SESSION['persona_verification_status'] );
 			unset( $_SESSION['persona_verification_inquiry_id'] );
 			unset( $_SESSION['persona_reference_id'] );
-			
+
 			// Also clear user meta for logged-in users
 			if ( is_user_logged_in() ) {
 				$user_id = get_current_user_id();
@@ -113,7 +113,7 @@ trait Persona_Verification_Common {
 				delete_user_meta( $user_id, 'persona_verification_last_checked' );
 				error_log( 'Persona Debug - Cleared user meta for user ID: ' . $user_id );
 			}
-			
+
 			error_log( 'Persona Debug - Cleared session data on registration page' );
 		}
 	}
