@@ -175,7 +175,7 @@ class WpWithPersona {
 		add_action( 'user_register', array( $this, 'update_persona_reference_id' ) );
 
 		// Display inquiry data in admin area
-		add_action( 'admin_notices', array( $this, 'display_inquiry_data_admin' ) );
+		// add_action( 'admin_notices', array( $this, 'display_inquiry_data_admin' ) );
 	} // End __construct ()
 
 
