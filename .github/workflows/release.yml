@@ -1,0 +1,89 @@
+name: Create Release on Main Update
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create_release:
+    name: Create a new release
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Extract the plugin version
+      - name: Get plugin version
+        id: get_version
+        run: |
+          VERSION=$(grep -oP 'Version:\s*\K[^\s]+' wp-withpersona.php)
+          echo "Plugin version is $VERSION"
+          echo "version=$VERSION" >> $GITHUB_ENV
+
+          # Split the version into components
+          IFS='.' read -r -a VERSION_PARTS <<< "$VERSION"
+          MAJOR="${VERSION_PARTS[0]}"
+          MINOR="${VERSION_PARTS[1]}"
+          PATCH="${VERSION_PARTS[2]}"
+
+          # Increment patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_ENV
+
+      # Update version in PHP file
+      - name: Update version in files
+        run: |
+          # Update version in the PHP comment
+          sed -i "s/Version:\s*${{ env.version }}/Version: ${{ env.new_version }}/" wp-withpersona.php
+
+          # Update version in the constant
+          sed -i "s/define( 'WP_WITH_PERSONA_PLUGIN_VERSION', '${{ env.version }}' );/define( 'WP_WITH_PERSONA_PLUGIN_VERSION', '${{ env.new_version }}' );/" wp-withpersona.php
+
+          # Commit the changes
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+
+          git add wp-withpersona.php
+          git commit -m "Bump version to ${{ env.new_version }}"
+          git push
+
+      # Get commit messages
+      - name: Get commit messages
+        id: get_commits
+        run: |
+          COMMITS=$(git log --format='- %s' $(git describe --tags --abbrev=0)..HEAD)
+          echo "commit_messages<<EOF" >> $GITHUB_ENV
+          echo "$COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # Composer install
+      - name: Install dependencies
+        run: composer install --no-dev --no-progress --no-interaction
+
+      # Prepare ZIP file excluding unwanted folders
+      - name: Create ZIP archive of the repository
+        run: |
+          mkdir -p temp/wp_withpersona
+          shopt -s dotglob extglob
+          rsync -av --exclude=temp --exclude=.git --exclude=.github --exclude=tests --exclude=e2e --exclude=docs --exclude=node_modules --exclude=package-lock.json --exclude=package.json ./ temp/wp_withpersona/
+          cd temp
+          zip -r wp_withpersona-${{ env.new_version }}.zip wp_withpersona
+          mv wp_withpersona-${{ env.new_version }}.zip ../wp_withpersona-${{ env.new_version }}.zip
+          cd ..
+          rm -rf temp
+
+      # Create a release and upload the ZIP file
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ env.new_version }}"
+          files: wp_withpersona-${{ env.new_version }}.zip
+          body: "Changes in this release:\n\n${{ env.commit_messages }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
