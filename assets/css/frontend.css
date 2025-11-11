@@ -1,0 +1,7 @@
+/* WithPersona Frontend Styles */
+.wp-withpersona-wrapper {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* Additional styles are handled inline in the verification template for better maintainability */ 
